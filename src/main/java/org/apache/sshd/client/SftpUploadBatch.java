@@ -10,6 +10,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Proxy;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.ArrayList;
@@ -29,7 +30,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.function.FailableBiConsumer;
 import org.apache.commons.lang3.function.FailableBiFunction;
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.function.FailableFunction;
@@ -50,6 +50,7 @@ import org.apache.sshd.common.session.SessionContext;
 import org.apache.sshd.common.session.SessionHolder;
 import org.apache.sshd.putty.PuttyKeyUtils;
 import org.apache.sshd.sftp.client.SftpClient;
+import org.apache.sshd.sftp.client.SftpClient.Attributes;
 import org.apache.sshd.sftp.client.SftpClientFactory;
 
 import io.github.toolfactory.narcissus.Narcissus;
@@ -91,13 +92,26 @@ public class SftpUploadBatch {
 				//
 				append(append(remoteFolder, '/'), getName(file));
 				//
+				Integer copy = null;
+				//
 				try (final SftpClient sftpClient = isSuccess(verify(auth(clientSession)))
 						? createSftpClient(SftpClientFactory.instance(), clientSession)
 						: null;
 						final InputStream is = testAndApply(Objects::nonNull, file, FileInputStream::new, null);
 						final OutputStream os = write(sftpClient, Objects.toString(remoteFolder))) {
 					//
-					testAndAccept((a, b) -> Boolean.logicalAnd(a != null, b != null), is, os, IOUtils::copy);
+					copy = testAndApply((a, b) -> Boolean.logicalAnd(a != null, b != null), is, os, IOUtils::copy,
+							null);
+					//
+					System.out.println("Path       =" + canonicalPath(sftpClient, Objects.toString(remoteFolder)));
+					//
+					System.out.println("Size       =" + copy);
+					//
+					final Attributes stat = stat(sftpClient, Objects.toString(remoteFolder));
+					//
+					System.out.println("Create Time=" + getCreateTime(stat));
+					//
+					System.out.println("Modify Time=" + getModifyTime(stat));
 					//
 				} // try
 					//
@@ -105,6 +119,22 @@ public class SftpUploadBatch {
 				//
 		} // try
 			//
+	}
+
+	private static FileTime getModifyTime(final Attributes instance) {
+		return instance != null ? instance.getModifyTime() : null;
+	}
+
+	private static FileTime getCreateTime(final Attributes instance) {
+		return instance != null ? instance.getCreateTime() : null;
+	}
+
+	private static Attributes stat(final SftpClient instance, final String path) throws IOException {
+		return instance != null ? instance.stat(path) : null;
+	}
+
+	private static String canonicalPath(final SftpClient instance, final String path) throws IOException {
+		return instance != null ? instance.canonicalPath(path) : null;
 	}
 
 	private static Collection<KeyPair> loadKeyPairs(final KeyPairResourceLoader instance, final SessionContext session,
@@ -169,13 +199,6 @@ public class SftpUploadBatch {
 
 	private static String getName(final File instance) {
 		return instance != null && instance.getPath() != null ? instance.getName() : null;
-	}
-
-	private static <T, U, E extends Exception> void testAndAccept(final BiPredicate<T, U> predicate, final T t,
-			final U u, final FailableBiConsumer<T, U, E> consumer) throws E {
-		if (predicate != null && predicate.test(t, u) && consumer != null) {
-			consumer.accept(t, u);
-		}
 	}
 
 	private static OutputStream write(final SftpClient instance, final String path) throws IOException {

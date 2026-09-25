@@ -28,7 +28,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.function.FailableBiConsumer;
 import org.apache.commons.lang3.function.FailableBiFunction;
 import org.apache.commons.lang3.function.FailableFunction;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -58,8 +57,8 @@ import io.github.toolfactory.narcissus.Narcissus;
 
 public class SftpUploadBatchTest {
 
-	private static Method METHOD_GET_NAME, METHOD_TEST_AND_ACCEPT, METHOD_IS_SUCCESS, METHOD_COLLECT, METHOD_EXISTS,
-			METHOD_IS_FILE, METHOD_TO_PATH = null;
+	private static Method METHOD_GET_NAME, METHOD_IS_SUCCESS, METHOD_COLLECT, METHOD_EXISTS, METHOD_IS_FILE,
+			METHOD_TO_PATH = null;
 
 	@BeforeClass
 	static void beforeClass() throws Throwable {
@@ -67,9 +66,6 @@ public class SftpUploadBatchTest {
 		final Class<?> clz = SftpUploadBatch.class;
 		//
 		(METHOD_GET_NAME = clz.getDeclaredMethod("getName", Member.class)).setAccessible(true);
-		//
-		(METHOD_TEST_AND_ACCEPT = clz.getDeclaredMethod("testAndAccept", BiPredicate.class, Object.class, Object.class,
-				FailableBiConsumer.class)).setAccessible(true);
 		//
 		(METHOD_IS_SUCCESS = clz.getDeclaredMethod("isSuccess", AuthFuture.class)).setAccessible(true);
 		//
@@ -172,7 +168,7 @@ public class SftpUploadBatchTest {
 				//
 				return null;
 				//
-			} else if (proxy instanceof SftpClient && Objects.equals(name, "write")) {
+			} else if (proxy instanceof SftpClient && contains(Arrays.asList("write", "stat", "canonicalPath"), name)) {
 				//
 				return null;
 				//
@@ -473,8 +469,8 @@ public class SftpUploadBatchTest {
 		//
 		final RandomStringUtils randomStringUtils = RandomStringUtils.secure();
 		//
-		final File folder = File.createTempFile(randomStringUtils != null ? randomStringUtils.nextAlphanumeric(3) : null,
-				null, new File("."));
+		final File folder = File.createTempFile(
+				randomStringUtils != null ? randomStringUtils.nextAlphanumeric(3) : null, null, new File("."));
 		//
 		if (folder != null && folder.exists()) {
 			//
@@ -499,20 +495,6 @@ public class SftpUploadBatchTest {
 	private static Object invoke(final Method method, final Object instance, final Object... args)
 			throws IllegalAccessException, InvocationTargetException {
 		return method != null && method.getDeclaringClass() != null ? method.invoke(instance, args) : null;
-	}
-
-	@Test
-	void testTestAndAccpt() throws IllegalAccessException, InvocationTargetException {
-		//
-		if ((ih = ObjectUtils.getIfNull(ih, IH::new)) != null) {
-			//
-			ih.test = Boolean.TRUE;
-			//
-		} // if
-			//
-		Assert.assertNull(
-				invoke(METHOD_TEST_AND_ACCEPT, null, Reflection.newProxy(BiPredicate.class, ih), null, null, null));
-		//
 	}
 
 	@Test
