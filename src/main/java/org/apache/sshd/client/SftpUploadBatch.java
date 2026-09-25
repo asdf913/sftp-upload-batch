@@ -56,6 +56,8 @@ import io.github.toolfactory.narcissus.Narcissus;
 
 public class SftpUploadBatch {
 
+	private static final String VALUE = "value";
+
 	public static void main(final String[] args) throws Exception {
 		//
 		final Map<String, String> map = toMap(args);
@@ -140,7 +142,7 @@ public class SftpUploadBatch {
 		final Field field = testAndApply(x -> size(x) == 1,
 				collect(filter(
 						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
-						f -> Objects.equals(getName(f), "value")), Collectors.toList()),
+						f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
 				x -> get(x, 0), null);
 		//
 		return field == null || Narcissus.getField(instance, field) != null ? instance.append(c) : instance;
@@ -158,7 +160,7 @@ public class SftpUploadBatch {
 		final Field field = testAndApply(x -> size(x) == 1,
 				collect(filter(
 						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
-						f -> Objects.equals(getName(f), "value")), Collectors.toList()),
+						f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
 				x -> get(x, 0), null);
 		//
 		return field == null || Narcissus.getField(instance, field) != null ? instance.append(obj) : instance;
@@ -296,7 +298,7 @@ public class SftpUploadBatch {
 		final Field field = testAndApply(x -> size(x) == 1,
 				collect(filter(
 						stream(testAndApply(Objects::nonNull, getClass(string), FieldUtils::getAllFieldsList, null)),
-						f -> Objects.equals(getName(f), "value")), Collectors.toList()),
+						f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
 				x -> get(x, 0), null);
 		//
 		if (string != null && field != null && Narcissus.getField(string, field) == null) {
