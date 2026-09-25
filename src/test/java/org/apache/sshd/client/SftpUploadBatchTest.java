@@ -10,7 +10,6 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.nio.file.FileSystems;
 import java.nio.file.Paths;
-import java.security.KeyStoreException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -191,7 +190,7 @@ public class SftpUploadBatchTest {
 	private File file = null;
 
 	@BeforeMethod
-	void beforeMethod() throws IllegalAccessException, InvocationTargetException, KeyStoreException, IOException {
+	void beforeMethod() throws IOException {
 		//
 		if ((sshServer = SshServer.setUpDefaultServer()) != null) {
 			//
