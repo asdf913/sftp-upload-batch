@@ -8,6 +8,11 @@ import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Proxy;
+import java.nio.file.OpenOption;
+import java.nio.file.Path;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -37,9 +42,13 @@ import org.apache.sshd.client.keyverifier.AcceptAllServerKeyVerifier;
 import org.apache.sshd.client.keyverifier.ServerKeyVerifier;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.client.session.ClientSessionCreator;
+import org.apache.sshd.common.config.keys.FilePasswordProvider;
+import org.apache.sshd.common.config.keys.loader.KeyPairResourceLoader;
 import org.apache.sshd.common.future.VerifiableFuture;
 import org.apache.sshd.common.session.Session;
+import org.apache.sshd.common.session.SessionContext;
 import org.apache.sshd.common.session.SessionHolder;
+import org.apache.sshd.putty.PuttyKeyUtils;
 import org.apache.sshd.sftp.client.SftpClient;
 import org.apache.sshd.sftp.client.SftpClientFactory;
 
@@ -65,6 +74,14 @@ public class SftpUploadBatch {
 				//
 				testAndAccept(Objects::nonNull, get(map, "password"), x -> addPasswordIdentity(clientSession, x));
 				//
+				testAndAccept(Objects::nonNull,
+						testAndApply(x -> size(x) == 1,
+								testAndApply(x -> Boolean.logicalAnd(exists(x), isFile(x)),
+										testAndApply(Objects::nonNull, get(map, "key"), File::new, null),
+										x -> loadKeyPairs(PuttyKeyUtils.DEFAULT_INSTANCE, null, toPath(x), null), null),
+								x -> new ArrayList<>(x).get(0), null),
+						x -> addPublicKeyIdentity(clientSession, x));
+				//
 				final File file = testAndApply(Objects::nonNull, get(map, "file"), File::new, null);
 				//
 				final StringBuilder remoteFolder = testAndApply(Objects::nonNull, get(map, "remoteFolder"),
@@ -86,6 +103,30 @@ public class SftpUploadBatch {
 				//
 		} // try
 			//
+	}
+
+	private static Collection<KeyPair> loadKeyPairs(final KeyPairResourceLoader instance, final SessionContext session,
+			final Path path, final FilePasswordProvider passwordProvider, final OpenOption... options)
+			throws IOException, GeneralSecurityException {
+		return instance != null ? instance.loadKeyPairs(session, path, passwordProvider, options) : null;
+	}
+
+	private static boolean exists(final File instance) {
+		return instance != null && instance.getPath() != null && instance.exists();
+	}
+
+	private static boolean isFile(final File instance) {
+		return instance != null && instance.getPath() != null && instance.isFile();
+	}
+
+	private static Path toPath(final File instance) {
+		return instance != null && instance.getPath() != null ? instance.toPath() : null;
+	}
+
+	private static void addPublicKeyIdentity(final ClientAuthenticationManager instance, final KeyPair keyPair) {
+		if (instance != null) {
+			instance.addPublicKeyIdentity(keyPair);
+		}
 	}
 
 	private static StringBuilder append(final StringBuilder instance, final char c) {

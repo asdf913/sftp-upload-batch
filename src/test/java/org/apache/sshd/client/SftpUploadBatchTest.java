@@ -35,6 +35,7 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.sshd.client.future.AuthFuture;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.client.session.ClientSessionCreator;
+import org.apache.sshd.common.config.keys.loader.KeyPairResourceLoader;
 import org.apache.sshd.common.file.virtualfs.VirtualFileSystemFactory;
 import org.apache.sshd.common.future.VerifiableFuture;
 import org.apache.sshd.common.session.SessionHolder;
@@ -57,7 +58,8 @@ import io.github.toolfactory.narcissus.Narcissus;
 
 public class SftpUploadBatchTest {
 
-	private static Method METHOD_GET_NAME, METHOD_TEST_AND_ACCEPT, METHOD_IS_SUCCESS, METHOD_COLLECT = null;
+	private static Method METHOD_GET_NAME, METHOD_TEST_AND_ACCEPT, METHOD_IS_SUCCESS, METHOD_COLLECT, METHOD_EXISTS,
+			METHOD_IS_FILE, METHOD_TO_PATH = null;
 
 	@BeforeClass
 	static void beforeClass() throws Throwable {
@@ -72,6 +74,12 @@ public class SftpUploadBatchTest {
 		(METHOD_IS_SUCCESS = clz.getDeclaredMethod("isSuccess", AuthFuture.class)).setAccessible(true);
 		//
 		(METHOD_COLLECT = clz.getDeclaredMethod("collect", Stream.class, Collector.class)).setAccessible(true);
+		//
+		(METHOD_EXISTS = clz.getDeclaredMethod("exists", File.class)).setAccessible(true);
+		//
+		(METHOD_IS_FILE = clz.getDeclaredMethod("isFile", File.class)).setAccessible(true);
+		//
+		(METHOD_TO_PATH = clz.getDeclaredMethod("toPath", File.class)).setAccessible(true);
 		//
 	}
 
@@ -168,6 +176,10 @@ public class SftpUploadBatchTest {
 				//
 				return null;
 				//
+			} else if (proxy instanceof KeyPairResourceLoader && Objects.equals(name, "loadKeyPairs")) {
+				//
+				return null;
+				//
 			} // if
 				//
 			throw new Throwable(name);
@@ -179,6 +191,8 @@ public class SftpUploadBatchTest {
 	private SshServer sshServer = null;
 
 	private IH ih = null;
+
+	private File file = null;
 
 	@BeforeMethod
 	void beforeMethod() throws IllegalAccessException, InvocationTargetException, KeyStoreException, IOException {
@@ -217,6 +231,8 @@ public class SftpUploadBatchTest {
 		} // if
 			//
 		ih = new IH();
+		//
+		file = new File("pom.xml");
 		//
 	}
 
@@ -519,6 +535,31 @@ public class SftpUploadBatchTest {
 		Assert.assertNull(invoke(METHOD_COLLECT, null, Stream.empty(), null));
 		//
 		Assert.assertNull(invoke(METHOD_COLLECT, null, Reflection.newProxy(Stream.class, ih), null));
+		//
+	}
+
+	@Test
+	void testExists() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertEquals(invoke(METHOD_EXISTS, null, file), Boolean.TRUE);
+		//
+		Assert.assertNotNull(invoke(METHOD_EXISTS, null, new File("")));
+		//
+	}
+
+	@Test
+	void testIsFile() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertEquals(invoke(METHOD_IS_FILE, null, file), Boolean.TRUE);
+		//
+		Assert.assertEquals(invoke(METHOD_IS_FILE, null, new File("")), Boolean.FALSE);
+		//
+	}
+
+	@Test
+	void testToPath() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertNotNull(invoke(METHOD_TO_PATH, null, file));
 		//
 	}
 
