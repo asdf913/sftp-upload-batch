@@ -473,22 +473,22 @@ public class SftpUploadBatchTest {
 		//
 		final RandomStringUtils randomStringUtils = RandomStringUtils.secure();
 		//
-		final File file = File.createTempFile(randomStringUtils != null ? randomStringUtils.nextAlphanumeric(3) : null,
+		final File folder = File.createTempFile(randomStringUtils != null ? randomStringUtils.nextAlphanumeric(3) : null,
 				null, new File("."));
 		//
-		if (file != null && file.exists()) {
+		if (folder != null && folder.exists()) {
 			//
-			FileUtils.copyFile(new File("pom.xml"), file);
+			FileUtils.copyFile(new File("pom.xml"), folder);
 			//
-			file.deleteOnExit();
+			folder.deleteOnExit();
 			//
 		} // if
 			//
 		SftpUploadBatch.main(new String[] { "host=" + host, "port=2222", "user=" + user, "password=password",
-				"file=" + getAbsolutePath(file),
-				"remoteFolder=" + getAbsolutePath(file != null ? file.getParentFile() : null) });
+				"file=" + getAbsolutePath(folder),
+				"remoteFolder=" + getAbsolutePath(folder != null ? folder.getParentFile() : null) });
 		//
-		FileUtils.deleteQuietly(file);
+		FileUtils.deleteQuietly(folder);
 		//
 	}
 
