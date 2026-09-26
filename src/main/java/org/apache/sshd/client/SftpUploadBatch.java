@@ -72,39 +72,40 @@ public class SftpUploadBatch {
 		//
 		final Map<String, String> map = toMap(args);
 		//
-		final Result result = perform(
-				testAndApply(Objects::nonNull, get(map, "host"),
+		info(LOG,
+				perform(testAndApply(Objects::nonNull, get(map, "host"),
 						x -> HostAndPort.fromParts(x, NumberUtils.toInt(get(map, "port"), 22)), null),
-				new BasicCredentialsImpl(get(map, "user"), get(map, "password")),
-				testAndApply(x -> size(x) == 1,
-						testAndApply(x -> Boolean.logicalAnd(exists(x), isFile(x)),
-								testAndApply(Objects::nonNull, get(map, "key"), File::new, null),
-								x -> loadKeyPairs(PuttyKeyUtils.DEFAULT_INSTANCE, null, toPath(x), null), null),
-						x -> new ArrayList<>(x).get(0), null),
-				testAndApply(Objects::nonNull, get(map, "file"), File::new, null), get(map, "remoteFolder"));
+						new BasicCredentialsImpl(get(map, "user"), get(map, "password")),
+						testAndApply(x -> size(x) == 1,
+								testAndApply(x -> Boolean.logicalAnd(exists(x), isFile(x)),
+										testAndApply(Objects::nonNull, get(map, "key"), File::new, null),
+										x -> loadKeyPairs(PuttyKeyUtils.DEFAULT_INSTANCE, null, toPath(x), null), null),
+								x -> new ArrayList<>(x).get(0), null),
+						testAndApply(Objects::nonNull, get(map, "file"), File::new, null), get(map, "remoteFolder")));
 		//
-		if (result != null) {
-			//
-			final HostAndPort hostAndPort = result.hostAndPort;
-			//
-			info(LOG, "Host       ={}", getHost(hostAndPort));
-			//
-			info(LOG, "Port       ={}", getPort(hostAndPort));
-			//
-			info(LOG, "User       ={}", getUsername(result.usernameHolder));
-			//
-			info(LOG, "Path       ={}", result.canonicalPath);
-			//
-			info(LOG, "Size       ={}", result.copy);
-			//
-			final Attributes stat = result.stat;
-			//
-			info(LOG, "Create Time={}", getCreateTime(stat));
-			//
-			info(LOG, "Modify Time={}", getModifyTime(stat));
-			//
-		} // if
-			//
+	}
+
+	private static void info(final Logger logger, final Result result) {
+		//
+		final HostAndPort hostAndPort = result != null ? result.hostAndPort : null;
+		//
+		info(logger, "Host       ={}", getHost(hostAndPort));
+		//
+		info(logger, "Port       ={}", getPort(hostAndPort));
+		//
+		info(logger, "User       ={}", getUsername(result != null ? result.usernameHolder : null));
+		//
+		info(logger, "Path       ={}", result != null ? result.canonicalPath : null);
+		//
+		info(logger, "Size       ={}", result != null ? result.copy : null);
+		//
+		final Attributes stat = result != null ? result.stat : null;
+		//
+		info(logger, "Create Time={}", getCreateTime(stat));
+		//
+		info(logger, "Modify Time={}", getModifyTime(stat));
+		//
+
 	}
 
 	private static String getUsername(final UsernameHolder instance) {
