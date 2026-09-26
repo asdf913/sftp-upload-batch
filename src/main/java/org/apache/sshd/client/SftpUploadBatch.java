@@ -229,7 +229,7 @@ public class SftpUploadBatch {
 		if ((file = testAndApply(Objects::nonNull,
 				getNodeValue(getNamedItem(
 						getAttributes(cast(Node.class, evaluate(xp, "/*/file", document, XPathConstants.NODE))),
-						"value")),
+						VALUE)),
 				File::new, null)) == null && !isTestMode() && jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
 			//
 			file = jfc.getSelectedFile();
@@ -240,7 +240,7 @@ public class SftpUploadBatch {
 		//
 		if (StringUtils.isEmpty(remoteFolder = getNodeValue(getNamedItem(
 				getAttributes(cast(Node.class, evaluate(xp, "/*/remoteFolder", document, XPathConstants.NODE))),
-				"value")))) {
+				VALUE)))) {
 			//
 			remoteFolder = !isTestMode() ? JOptionPane.showInputDialog(null, "Remote Folder", remoteFolder) : null;
 			//
