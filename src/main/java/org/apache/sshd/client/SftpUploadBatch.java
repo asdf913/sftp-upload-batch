@@ -91,11 +91,13 @@ public class SftpUploadBatch {
 		//
 		final File file = testAndApply(Objects::nonNull, get(map, "file"), File::new, null);
 		//
+		final String remoteFolder = get(map, "remoteFolder");
+		//
 		if (containsKey(map, "config")) {
 			//
 			perform(parse(newDocumentBuilder(DocumentBuilderFactory.newInstance()),
 					testAndApply(Objects::nonNull, get(map, "config"), File::new, null)),
-					newXPath(XPathFactory.newInstance()), file);
+					newXPath(XPathFactory.newInstance()), file, remoteFolder);
 			//
 		} else {
 			//
@@ -107,7 +109,7 @@ public class SftpUploadBatch {
 									testAndApply(Objects::nonNull, get(map, "key"), File::new, null),
 									x -> loadKeyPairs(PuttyKeyUtils.DEFAULT_INSTANCE, null, toPath(x), null), null),
 									x -> new ArrayList<>(x).get(0), null),
-							file, get(map, "remoteFolder")));
+							file, remoteFolder));
 			//
 		} // if
 			//
@@ -222,7 +224,8 @@ public class SftpUploadBatch {
 
 	}
 
-	private static void perform(final Document document, final XPath xp, final File f) throws Exception {
+	private static void perform(final Document document, final XPath xp, final File f, final String remoteFolderString)
+			throws Exception {
 		//
 		final JFileChooser jfc = new JFileChooser();
 		//
@@ -237,11 +240,17 @@ public class SftpUploadBatch {
 			//
 		} // if
 			//
-		String remoteFolder = null;
+		String remoteFolder = remoteFolderString;
 		//
-		if (StringUtils.isEmpty(remoteFolder = getNodeValue(getNamedItem(
-				getAttributes(cast(Node.class, evaluate(xp, "/*/remoteFolder", document, XPathConstants.NODE))),
-				VALUE)))) {
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(stream(testAndApply(Objects::nonNull, getClass(remoteFolderString),
+						FieldUtils::getAllFieldsList, null)), x -> Objects.equals(getName(x), VALUE)),
+						Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		final boolean valid = field == null || Narcissus.getField(remoteFolder, field) != null;
+		//
+		if (remoteFolder == null || (valid && StringUtils.isEmpty(remoteFolder)) || !valid) {
 			//
 			remoteFolder = !isTestMode() && !isHeadless
 					? JOptionPane.showInputDialog(null, "Remote Folder", remoteFolder)
@@ -249,7 +258,7 @@ public class SftpUploadBatch {
 			//
 		} // if
 			//
-		final NodeList nodeList = cast(NodeList.class, evaluate(xp, "/*/*/host", document, XPathConstants.NODESET));
+		final NodeList nodeList = cast(NodeList.class, evaluate(xp, "/*/host", document, XPathConstants.NODESET));
 		//
 		Node node = null;
 		//
@@ -354,7 +363,8 @@ public class SftpUploadBatch {
 						final InputStream is = testAndApply(
 								x -> x != null && x.getPath() != null && exists(x) && isFile(x), file,
 								FileInputStream::new, null);
-						final OutputStream os = isFile(file) ? write(sftpClient, Objects.toString(remoteFolder))
+						final OutputStream os = Boolean.logicalAnd(isFile(file), remoteFolder != null)
+								? write(sftpClient, Objects.toString(remoteFolder))
 								: null) {
 					//
 					(result = new Result()).hostAndPort = hostAndPort;

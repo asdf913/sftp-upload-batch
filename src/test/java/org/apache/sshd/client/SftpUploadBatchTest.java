@@ -96,7 +96,7 @@ public class SftpUploadBatchTest {
 		(METHOD_NEW_DOCUMENT_BUILDER = clz.getDeclaredMethod("newDocumentBuilder", DocumentBuilderFactory.class))
 				.setAccessible(true);
 		//
-		(METHOD_PERFORM = clz.getDeclaredMethod("perform", Document.class, XPath.class, File.class))
+		(METHOD_PERFORM = clz.getDeclaredMethod("perform", Document.class, XPath.class, File.class, String.class))
 				.setAccessible(true);
 		//
 		(METHOD_NEW_XPATH = clz.getDeclaredMethod("newXPath", XPathFactory.class)).setAccessible(true);
@@ -652,9 +652,7 @@ public class SftpUploadBatchTest {
 		final Document document = newDocument(cast(DocumentBuilder.class,
 				invoke(METHOD_NEW_DOCUMENT_BUILDER, null, DocumentBuilderFactory.newInstance())));
 		//
-		final Node config = appendChild(document, createElement(document, "config"));
-		//
-		final Node hosts = appendChild(config, createElement(document, "hosts"));
+		final Node hosts = appendChild(document, createElement(document, "hosts"));
 		//
 		final Element hostElement = createElement(document, "host");
 		//
@@ -678,21 +676,19 @@ public class SftpUploadBatchTest {
 			//
 		} // if
 			//
-		final Element remoteFolderElement = createElement(document, "remoteFolder");
-		//
-		appendChild(config, remoteFolderElement);
-		//
-		setAttribute(remoteFolderElement, "value", getAbsolutePath(f != null ? f.getParentFile() : null));
+		final String remoteFolder = getAbsolutePath(f != null ? f.getParentFile() : null);
 		//
 		final XPathFactory xpf = XPathFactory.newInstance();
 		//
-		Assert.assertNull(invoke(METHOD_PERFORM, null, document, invoke(METHOD_NEW_XPATH, null, xpf), null));
+		final Object xp = invoke(METHOD_NEW_XPATH, null, xpf);
 		//
-		Assert.assertNull(invoke(METHOD_PERFORM, null, document, invoke(METHOD_NEW_XPATH, null, xpf), f));
+		Assert.assertNull(invoke(METHOD_PERFORM, null, document, xp, null, remoteFolder));
 		//
-		Assert.assertNull(invoke(METHOD_PERFORM, null, document, invoke(METHOD_NEW_XPATH, null, xpf), new File("1")));
+		Assert.assertNull(invoke(METHOD_PERFORM, null, document, xp, f, remoteFolder));
 		//
-		Assert.assertNull(invoke(METHOD_PERFORM, null, document, invoke(METHOD_NEW_XPATH, null, xpf), new File(".")));
+		Assert.assertNull(invoke(METHOD_PERFORM, null, document, xp, new File("1"), remoteFolder));
+		//
+		Assert.assertNull(invoke(METHOD_PERFORM, null, document, xp, new File("."), remoteFolder));
 		//
 		FileUtils.deleteQuietly(f);
 		//
