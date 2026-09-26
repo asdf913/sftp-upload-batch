@@ -252,7 +252,7 @@ public class SftpUploadBatch {
 		//
 		if (remoteFolder == null || (valid && StringUtils.isEmpty(remoteFolder)) || !valid) {
 			//
-			remoteFolder = !isTestMode() && !isHeadless
+			remoteFolder = Boolean.logicalAnd(!isTestMode(), !isHeadless)
 					? JOptionPane.showInputDialog(null, "Remote Folder", remoteFolder)
 					: null;
 			//
