@@ -52,10 +52,14 @@ import org.apache.sshd.putty.PuttyKeyUtils;
 import org.apache.sshd.sftp.client.SftpClient;
 import org.apache.sshd.sftp.client.SftpClient.Attributes;
 import org.apache.sshd.sftp.client.SftpClientFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.github.toolfactory.narcissus.Narcissus;
 
 public class SftpUploadBatch {
+
+	private static final Logger LOG = LoggerFactory.getLogger(SftpUploadBatch.class);
 
 	private static final String VALUE = "value";
 
@@ -103,15 +107,15 @@ public class SftpUploadBatch {
 					copy = testAndApply((a, b) -> Boolean.logicalAnd(a != null, b != null), is, os, IOUtils::copy,
 							null);
 					//
-					System.out.println("Path       =" + canonicalPath(sftpClient, Objects.toString(remoteFolder)));
+					info(LOG, "Path       ={}", canonicalPath(sftpClient, Objects.toString(remoteFolder)));
 					//
-					System.out.println("Size       =" + copy);
+					info(LOG, "Size       ={}", copy);
 					//
 					final Attributes stat = stat(sftpClient, Objects.toString(remoteFolder));
 					//
-					System.out.println("Create Time=" + getCreateTime(stat));
+					info(LOG, "Create Time={}", getCreateTime(stat));
 					//
-					System.out.println("Modify Time=" + getModifyTime(stat));
+					info(LOG, "Modify Time={}", getModifyTime(stat));
 					//
 				} // try
 					//
@@ -119,6 +123,12 @@ public class SftpUploadBatch {
 				//
 		} // try
 			//
+	}
+
+	private static void info(final Logger instance, final String format, final Object object) {
+		if (instance != null) {
+			instance.info(format, object);
+		}
 	}
 
 	private static FileTime getModifyTime(final Attributes instance) {
