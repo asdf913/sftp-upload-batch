@@ -1,5 +1,6 @@
 package org.apache.sshd.client;
 
+import java.awt.GraphicsEnvironment;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -226,11 +227,14 @@ public class SftpUploadBatch {
 		//
 		File file = null;
 		//
+		final boolean isHeadless = GraphicsEnvironment.isHeadless();
+		//
 		if ((file = testAndApply(Objects::nonNull,
 				getNodeValue(getNamedItem(
 						getAttributes(cast(Node.class, evaluate(xp, "/*/file", document, XPathConstants.NODE))),
 						VALUE)),
-				File::new, null)) == null && !isTestMode() && jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+				File::new, null)) == null && !isTestMode() && !isHeadless
+				&& jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
 			//
 			file = jfc.getSelectedFile();
 			//
@@ -242,7 +246,9 @@ public class SftpUploadBatch {
 				getAttributes(cast(Node.class, evaluate(xp, "/*/remoteFolder", document, XPathConstants.NODE))),
 				VALUE)))) {
 			//
-			remoteFolder = !isTestMode() ? JOptionPane.showInputDialog(null, "Remote Folder", remoteFolder) : null;
+			remoteFolder = !isTestMode() && !isHeadless
+					? JOptionPane.showInputDialog(null, "Remote Folder", remoteFolder)
+					: null;
 			//
 		} // if
 			//
