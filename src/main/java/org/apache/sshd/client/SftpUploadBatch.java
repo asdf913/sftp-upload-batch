@@ -262,6 +262,12 @@ public class SftpUploadBatch {
 		//
 		Node node = null;
 		//
+		Map<File, KeyPair> keyPairs = null;
+		//
+		KeyPair keyPair = null;
+		//
+		File key = null;
+		//
 		for (int i = 0; nodeList != null && i < nodeList.getLength(); i++) {
 			//
 			if ((node = nodeList.item(i)) == null) {
@@ -272,6 +278,18 @@ public class SftpUploadBatch {
 				//
 			final Node n = node;
 			//
+			if ((keyPair = get(keyPairs = ObjectUtils.getIfNull(keyPairs, LinkedHashMap::new),
+					key = testAndApply(Objects::nonNull, getNodeValue(getNamedItem(getAttributes(node), "key")),
+							File::new, null))) == null) {
+				//
+				put(keyPairs, key,
+						keyPair = testAndApply(x -> size(x) == 1,
+								testAndApply(x -> Boolean.logicalAnd(exists(x), isFile(x)), key,
+										x -> loadKeyPairs(PuttyKeyUtils.DEFAULT_INSTANCE, null, toPath(x), null), null),
+								x -> new ArrayList<>(x).get(0), null));
+				//
+			} // if
+				//
 			info(LOG, perform(
 					testAndApply(Objects::nonNull, getNodeValue(getNamedItem(getAttributes(node), "host")),
 							x -> HostAndPort.fromParts(x,
@@ -279,13 +297,7 @@ public class SftpUploadBatch {
 							null),
 					new BasicCredentialsImpl(getNodeValue(getNamedItem(getAttributes(node), "user")),
 							getNodeValue(getNamedItem(getAttributes(node), "password"))),
-					testAndApply(x -> size(x) == 1,
-							testAndApply(x -> Boolean.logicalAnd(exists(x), isFile(x)),
-									testAndApply(Objects::nonNull,
-											getNodeValue(getNamedItem(getAttributes(node), "key")), File::new, null),
-									x -> loadKeyPairs(PuttyKeyUtils.DEFAULT_INSTANCE, null, toPath(x), null), null),
-							x -> new ArrayList<>(x).get(0), null),
-					file, remoteFolder));
+					keyPair, file, remoteFolder));
 			//
 		} // for
 			//
