@@ -62,6 +62,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import com.google.common.net.HostAndPort;
 import com.google.common.reflect.Reflection;
@@ -109,7 +110,7 @@ public class SftpUploadBatchTest {
 
 		private Boolean test, isSuccess, containsKey;
 
-		private Integer size;
+		private Integer size, length;
 
 		@Override
 		public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
@@ -226,6 +227,18 @@ public class SftpUploadBatchTest {
 				//
 				return null;
 				//
+			} else if (proxy instanceof NodeList) {
+				//
+				if (Objects.equals(name, "getLength")) {
+					//
+					return length;
+					//
+				} else if (Objects.equals(name, "item")) {
+					//
+					return null;
+					//
+				} // if
+					//
 			} else if (proxy instanceof NamedNodeMap && Objects.equals(name, "getNamedItem")) {
 				//
 				return null;
