@@ -89,24 +89,25 @@ public class SftpUploadBatch {
 		//
 		final Map<String, String> map = toMap(args);
 		//
+		final File file = testAndApply(Objects::nonNull, get(map, "file"), File::new, null);
+		//
 		if (containsKey(map, "config")) {
 			//
 			perform(parse(newDocumentBuilder(DocumentBuilderFactory.newInstance()),
 					testAndApply(Objects::nonNull, get(map, "config"), File::new, null)),
-					newXPath(XPathFactory.newInstance()));
+					newXPath(XPathFactory.newInstance()), file);
 			//
 		} else {
 			//
-			info(LOG, perform(
-					testAndApply(Objects::nonNull, get(map, "host"),
+			info(LOG,
+					perform(testAndApply(Objects::nonNull, get(map, "host"),
 							x -> HostAndPort.fromParts(x, NumberUtils.toInt(get(map, "port"), 22)), null),
-					new BasicCredentialsImpl(get(map, "user"), get(map, "password")),
-					testAndApply(x -> size(x) == 1,
-							testAndApply(x -> Boolean.logicalAnd(exists(x), isFile(x)),
+							new BasicCredentialsImpl(get(map, "user"), get(map, "password")),
+							testAndApply(x -> size(x) == 1, testAndApply(x -> Boolean.logicalAnd(exists(x), isFile(x)),
 									testAndApply(Objects::nonNull, get(map, "key"), File::new, null),
 									x -> loadKeyPairs(PuttyKeyUtils.DEFAULT_INSTANCE, null, toPath(x), null), null),
-							x -> new ArrayList<>(x).get(0), null),
-					testAndApply(Objects::nonNull, get(map, "file"), File::new, null), get(map, "remoteFolder")));
+									x -> new ArrayList<>(x).get(0), null),
+							file, get(map, "remoteFolder")));
 			//
 		} // if
 			//
@@ -221,19 +222,15 @@ public class SftpUploadBatch {
 
 	}
 
-	private static void perform(final Document document, final XPath xp) throws Exception {
+	private static void perform(final Document document, final XPath xp, final File f) throws Exception {
 		//
 		final JFileChooser jfc = new JFileChooser();
 		//
-		File file = null;
+		File file = f;
 		//
 		final boolean isHeadless = GraphicsEnvironment.isHeadless();
 		//
-		if ((file = testAndApply(Objects::nonNull,
-				getNodeValue(getNamedItem(
-						getAttributes(cast(Node.class, evaluate(xp, "/*/file", document, XPathConstants.NODE))),
-						VALUE)),
-				File::new, null)) == null && !isTestMode() && !isHeadless
+		if ((file == null || !exists(file) || !isFile(file)) && !isTestMode() && !isHeadless
 				&& jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
 			//
 			file = jfc.getSelectedFile();
@@ -354,9 +351,10 @@ public class SftpUploadBatch {
 				try (final SftpClient sftpClient = isSuccess(verify(auth(clientSession)))
 						? createSftpClient(SftpClientFactory.instance(), clientSession)
 						: null;
-						final InputStream is = testAndApply(x -> x != null && x.getPath() != null, file,
+						final InputStream is = testAndApply(
+								x -> x != null && x.getPath() != null && exists(x) && isFile(x), file,
 								FileInputStream::new, null);
-						final OutputStream os = file != null ? write(sftpClient, Objects.toString(remoteFolder))
+						final OutputStream os = isFile(file) ? write(sftpClient, Objects.toString(remoteFolder))
 								: null) {
 					//
 					(result = new Result()).hostAndPort = hostAndPort;
@@ -368,7 +366,7 @@ public class SftpUploadBatch {
 					//
 					result.canonicalPath = canonicalPath(sftpClient, Objects.toString(remoteFolder));
 					//
-					result.stat = file != null ? stat(sftpClient, Objects.toString(remoteFolder)) : null;
+					result.stat = os != null ? stat(sftpClient, Objects.toString(remoteFolder)) : null;
 					//
 				} // try
 					//

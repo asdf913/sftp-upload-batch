@@ -96,7 +96,8 @@ public class SftpUploadBatchTest {
 		(METHOD_NEW_DOCUMENT_BUILDER = clz.getDeclaredMethod("newDocumentBuilder", DocumentBuilderFactory.class))
 				.setAccessible(true);
 		//
-		(METHOD_PERFORM = clz.getDeclaredMethod("perform", Document.class, XPath.class)).setAccessible(true);
+		(METHOD_PERFORM = clz.getDeclaredMethod("perform", Document.class, XPath.class, File.class))
+				.setAccessible(true);
 		//
 		(METHOD_NEW_XPATH = clz.getDeclaredMethod("newXPath", XPathFactory.class)).setAccessible(true);
 		//
@@ -683,17 +684,15 @@ public class SftpUploadBatchTest {
 		//
 		setAttribute(remoteFolderElement, "value", getAbsolutePath(f != null ? f.getParentFile() : null));
 		//
-		Assert.assertNull(
-				invoke(METHOD_PERFORM, null, document, invoke(METHOD_NEW_XPATH, null, XPathFactory.newInstance())));
+		final XPathFactory xpf = XPathFactory.newInstance();
 		//
-		final Element fileElement = createElement(document, "file");
+		Assert.assertNull(invoke(METHOD_PERFORM, null, document, invoke(METHOD_NEW_XPATH, null, xpf), null));
 		//
-		appendChild(config, fileElement);
+		Assert.assertNull(invoke(METHOD_PERFORM, null, document, invoke(METHOD_NEW_XPATH, null, xpf), f));
 		//
-		setAttribute(fileElement, "value", getAbsolutePath(f));
+		Assert.assertNull(invoke(METHOD_PERFORM, null, document, invoke(METHOD_NEW_XPATH, null, xpf), new File("1")));
 		//
-		Assert.assertNull(
-				invoke(METHOD_PERFORM, null, document, invoke(METHOD_NEW_XPATH, null, XPathFactory.newInstance())));
+		Assert.assertNull(invoke(METHOD_PERFORM, null, document, invoke(METHOD_NEW_XPATH, null, xpf), new File(".")));
 		//
 		FileUtils.deleteQuietly(f);
 		//
