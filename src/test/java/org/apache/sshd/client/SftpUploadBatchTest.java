@@ -24,6 +24,11 @@ import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathFactory;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -53,6 +58,10 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
 import com.google.common.net.HostAndPort;
 import com.google.common.reflect.Reflection;
@@ -62,7 +71,8 @@ import io.github.toolfactory.narcissus.Narcissus;
 public class SftpUploadBatchTest {
 
 	private static Method METHOD_GET_NAME, METHOD_IS_SUCCESS, METHOD_COLLECT, METHOD_EXISTS, METHOD_IS_FILE,
-			METHOD_TO_PATH, METHOD_GET_PORT = null;
+			METHOD_TO_PATH, METHOD_GET_PORT, METHOD_NEW_DOCUMENT_BUILDER, METHOD_PERFORM, METHOD_NEW_XPATH,
+			METHOD_CAST = null;
 
 	@BeforeClass
 	static void beforeClass() throws Throwable {
@@ -83,11 +93,20 @@ public class SftpUploadBatchTest {
 		//
 		(METHOD_GET_PORT = clz.getDeclaredMethod("getPort", HostAndPort.class)).setAccessible(true);
 		//
+		(METHOD_NEW_DOCUMENT_BUILDER = clz.getDeclaredMethod("newDocumentBuilder", DocumentBuilderFactory.class))
+				.setAccessible(true);
+		//
+		(METHOD_PERFORM = clz.getDeclaredMethod("perform", Document.class, XPath.class)).setAccessible(true);
+		//
+		(METHOD_NEW_XPATH = clz.getDeclaredMethod("newXPath", XPathFactory.class)).setAccessible(true);
+		//
+		(METHOD_CAST = clz.getDeclaredMethod("cast", Class.class, Object.class)).setAccessible(true);
+		//
 	}
 
 	private static class IH implements InvocationHandler {
 
-		private Boolean test, isSuccess;
+		private Boolean test, isSuccess, containsKey;
 
 		private Integer size;
 
@@ -116,10 +135,18 @@ public class SftpUploadBatchTest {
 					//
 			} // if
 				//
-			if (Boolean.logicalAnd(proxy instanceof Map, contains(Arrays.asList("get", "put"), name))) {
+			if (proxy instanceof Map) {
 				//
-				return null;
-				//
+				if (contains(Arrays.asList("get", "put"), name)) {
+					//
+					return null;
+					//
+				} else if (Objects.equals(name, "containsKey")) {
+					//
+					return containsKey;
+					//
+				} // if
+					//
 			} else if (Boolean.logicalOr(proxy instanceof Predicate, proxy instanceof BiPredicate)
 					&& Objects.equals(name, "test")) {
 				//
@@ -190,6 +217,18 @@ public class SftpUploadBatchTest {
 				//
 				return null;
 				//
+			} else if (proxy instanceof XPath && Objects.equals(name, "evaluate")) {
+				//
+				return null;
+				//
+			} else if (proxy instanceof Node && contains(Arrays.asList("getAttributes", "getNodeValue"), name)) {
+				//
+				return null;
+				//
+			} else if (proxy instanceof NamedNodeMap && Objects.equals(name, "getNamedItem")) {
+				//
+				return null;
+				//
 			} // if
 				//
 			throw new Throwable(name);
@@ -203,6 +242,8 @@ public class SftpUploadBatchTest {
 	private IH ih = null;
 
 	private File file = null;
+
+	private RandomStringUtils randomStringUtils = null;
 
 	@BeforeMethod
 	void beforeMethod() throws IOException {
@@ -243,6 +284,8 @@ public class SftpUploadBatchTest {
 		ih = new IH();
 		//
 		file = new File("pom.xml");
+		//
+		randomStringUtils = RandomStringUtils.secure();
 		//
 	}
 
@@ -440,6 +483,23 @@ public class SftpUploadBatchTest {
 					//
 					add(collection, Character.valueOf(' '));
 					//
+				} else if (Objects.equals(parameterType, Class.class)) {
+					//
+					add(collection, Class.class);
+					//
+				} else if (Objects.equals(parameterType, DocumentBuilder.class)) {
+					//
+					add(collection, Narcissus.allocateInstance(
+							getClass(invoke(METHOD_NEW_DOCUMENT_BUILDER, null, DocumentBuilderFactory.newInstance()))));
+					//
+				} else if (Objects.equals(parameterType, XPathFactory.class)) {
+					//
+					add(collection, Narcissus.allocateInstance(getClass(XPathFactory.newInstance())));
+					//
+				} else if (Objects.equals(parameterType, DocumentBuilderFactory.class)) {
+					//
+					add(collection, Narcissus.allocateInstance(getClass(DocumentBuilderFactory.newInstance())));
+					//
 				} else {
 					//
 					add(collection, Narcissus.allocateInstance(parameterType));
@@ -493,25 +553,32 @@ public class SftpUploadBatchTest {
 		//
 		final String user = "user";
 		//
-		final RandomStringUtils randomStringUtils = RandomStringUtils.secure();
+		final File f = File.createTempFile(nextAlphanumeric(randomStringUtils, 3), null, new File("."));
 		//
-		final File folder = File.createTempFile(
-				randomStringUtils != null ? randomStringUtils.nextAlphanumeric(3) : null, null, new File("."));
-		//
-		if (folder != null && folder.exists()) {
+		if (f != null && f.exists()) {
 			//
-			FileUtils.copyFile(new File("pom.xml"), folder);
+			FileUtils.copyFile(new File("pom.xml"), f);
 			//
-			folder.deleteOnExit();
+			f.deleteOnExit();
 			//
 		} // if
 			//
 		SftpUploadBatch.main(new String[] { "host=" + host, "port=2222", "user=" + user, "password=password",
-				"file=" + getAbsolutePath(folder),
-				"remoteFolder=" + getAbsolutePath(folder != null ? folder.getParentFile() : null) });
+				"file=" + getAbsolutePath(f),
+				"remoteFolder=" + getAbsolutePath(f != null ? f.getParentFile() : null) });
 		//
-		FileUtils.deleteQuietly(folder);
+		SftpUploadBatch.main(new String[] { "config=" });
 		//
+		SftpUploadBatch.main(new String[] { "config=." });
+		//
+		SftpUploadBatch.main(new String[] { "config=pom.xml" });
+		//
+		FileUtils.deleteQuietly(f);
+		//
+	}
+
+	private static String nextAlphanumeric(final RandomStringUtils instnace, final int count) {
+		return instnace != null ? instnace.nextAlphanumeric(count) : null;
 	}
 
 	private static String getAbsolutePath(final File instance) {
@@ -576,6 +643,86 @@ public class SftpUploadBatchTest {
 		//
 		Assert.assertNull(invoke(METHOD_GET_PORT, null, HostAndPort.fromHost("")));
 		//
+	}
+
+	@Test
+	void testPerform() throws Throwable {
+		//
+		final Document document = newDocument(cast(DocumentBuilder.class,
+				invoke(METHOD_NEW_DOCUMENT_BUILDER, null, DocumentBuilderFactory.newInstance())));
+		//
+		final Node config = appendChild(document, createElement(document, "config"));
+		//
+		final Node hosts = appendChild(config, createElement(document, "hosts"));
+		//
+		final Element hostElement = createElement(document, "host");
+		//
+		appendChild(hosts, hostElement);
+		//
+		setAttribute(hostElement, "host", "127.0.0.1");
+		//
+		setAttribute(hostElement, "port", "2222");
+		//
+		setAttribute(hostElement, "user", "user");
+		//
+		setAttribute(hostElement, "password", "password");
+		//
+		final File f = File.createTempFile(nextAlphanumeric(randomStringUtils, 3), null, new File("."));
+		//
+		if (f != null && f.exists()) {
+			//
+			FileUtils.copyFile(new File("pom.xml"), f);
+			//
+			f.deleteOnExit();
+			//
+		} // if
+			//
+		final Element remoteFolderElement = createElement(document, "remoteFolder");
+		//
+		appendChild(config, remoteFolderElement);
+		//
+		setAttribute(remoteFolderElement, "value", getAbsolutePath(f != null ? f.getParentFile() : null));
+		//
+		Assert.assertNull(
+				invoke(METHOD_PERFORM, null, document, invoke(METHOD_NEW_XPATH, null, XPathFactory.newInstance())));
+		//
+		final Element fileElement = createElement(document, "file");
+		//
+		appendChild(config, fileElement);
+		//
+		setAttribute(fileElement, "value", getAbsolutePath(f));
+		//
+		Assert.assertNull(
+				invoke(METHOD_PERFORM, null, document, invoke(METHOD_NEW_XPATH, null, XPathFactory.newInstance())));
+		//
+		FileUtils.deleteQuietly(f);
+		//
+	}
+
+	private static void setAttribute(final Element instance, final String key, final String value) {
+		if (instance != null) {
+			instance.setAttribute(key, value);
+		}
+	}
+
+	private static Element createElement(final Document instance, final String tagName) {
+		return instance != null ? instance.createElement(tagName) : null;
+	}
+
+	private static Node appendChild(final Node instance, final Node newChild) {
+		return instance != null ? instance.appendChild(newChild) : null;
+	}
+
+	private static Document newDocument(final DocumentBuilder instance) {
+		return instance != null ? instance.newDocument() : null;
+	}
+
+	private static <T> T cast(final Class<T> clz, final Object instance) throws Throwable {
+		try {
+			return (T) invoke(METHOD_CAST, null, clz, instance);
+		} catch (final InvocationTargetException e) {
+			throw e.getTargetException();
+		}
 	}
 
 }

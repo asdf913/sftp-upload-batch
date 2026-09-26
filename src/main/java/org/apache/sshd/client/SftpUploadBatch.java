@@ -26,6 +26,17 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.xml.namespace.QName;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -57,6 +68,11 @@ import org.apache.sshd.sftp.client.SftpClient.Attributes;
 import org.apache.sshd.sftp.client.SftpClientFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import com.google.common.net.HostAndPort;
 
@@ -72,17 +88,87 @@ public class SftpUploadBatch {
 		//
 		final Map<String, String> map = toMap(args);
 		//
-		info(LOG,
-				perform(testAndApply(Objects::nonNull, get(map, "host"),
-						x -> HostAndPort.fromParts(x, NumberUtils.toInt(get(map, "port"), 22)), null),
-						new BasicCredentialsImpl(get(map, "user"), get(map, "password")),
-						testAndApply(x -> size(x) == 1,
-								testAndApply(x -> Boolean.logicalAnd(exists(x), isFile(x)),
-										testAndApply(Objects::nonNull, get(map, "key"), File::new, null),
-										x -> loadKeyPairs(PuttyKeyUtils.DEFAULT_INSTANCE, null, toPath(x), null), null),
-								x -> new ArrayList<>(x).get(0), null),
-						testAndApply(Objects::nonNull, get(map, "file"), File::new, null), get(map, "remoteFolder")));
+		if (containsKey(map, "config")) {
+			//
+			perform(parse(newDocumentBuilder(DocumentBuilderFactory.newInstance()),
+					testAndApply(Objects::nonNull, get(map, "config"), File::new, null)),
+					newXPath(XPathFactory.newInstance()));
+			//
+		} else {
+			//
+			info(LOG, perform(
+					testAndApply(Objects::nonNull, get(map, "host"),
+							x -> HostAndPort.fromParts(x, NumberUtils.toInt(get(map, "port"), 22)), null),
+					new BasicCredentialsImpl(get(map, "user"), get(map, "password")),
+					testAndApply(x -> size(x) == 1,
+							testAndApply(x -> Boolean.logicalAnd(exists(x), isFile(x)),
+									testAndApply(Objects::nonNull, get(map, "key"), File::new, null),
+									x -> loadKeyPairs(PuttyKeyUtils.DEFAULT_INSTANCE, null, toPath(x), null), null),
+							x -> new ArrayList<>(x).get(0), null),
+					testAndApply(Objects::nonNull, get(map, "file"), File::new, null), get(map, "remoteFolder")));
+			//
+		} // if
+			//
+	}
+
+	private static XPath newXPath(final XPathFactory instance) {
 		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "_featureManager")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return field == null || Narcissus.getField(instance, field) != null ? instance.newXPath() : null;
+		//
+	}
+
+	private static Document parse(final DocumentBuilder instance, final File file) throws SAXException, IOException {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "domParser")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return (field == null || Narcissus.getField(instance, field) != null) && file != null && file.getPath() != null
+				&& exists(file) && file.isFile() ? instance.parse(file) : null;
+		//
+	}
+
+	private static DocumentBuilder newDocumentBuilder(final DocumentBuilderFactory instance)
+			throws ParserConfigurationException {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "fSecurityManager")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return field == null || Narcissus.getField(instance, field) != null ? instance.newDocumentBuilder() : null;
+		//
+	}
+
+	private static boolean containsKey(final Map<?, ?> instance, final Object key) {
+		return instance != null && instance.containsKey(key);
 	}
 
 	private static void info(final Logger logger, final Result result) {
@@ -134,6 +220,94 @@ public class SftpUploadBatch {
 
 	}
 
+	private static void perform(final Document document, final XPath xp) throws Exception {
+		//
+		final JFileChooser jfc = new JFileChooser();
+		//
+		File file = null;
+		//
+		if ((file = testAndApply(Objects::nonNull,
+				getNodeValue(getNamedItem(
+						getAttributes(cast(Node.class, evaluate(xp, "/*/file", document, XPathConstants.NODE))),
+						"value")),
+				File::new, null)) == null && !isTestMode() && jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+			//
+			file = jfc.getSelectedFile();
+			//
+		} // if
+			//
+		String remoteFolder = null;
+		//
+		if (StringUtils.isEmpty(remoteFolder = getNodeValue(getNamedItem(
+				getAttributes(cast(Node.class, evaluate(xp, "/*/remoteFolder", document, XPathConstants.NODE))),
+				"value")))) {
+			//
+			remoteFolder = !isTestMode() ? JOptionPane.showInputDialog(null, "Remote Folder", remoteFolder) : null;
+			//
+		} // if
+			//
+		final NodeList nodeList = cast(NodeList.class, evaluate(xp, "/*/*/host", document, XPathConstants.NODESET));
+		//
+		Node node = null;
+		//
+		for (int i = 0; nodeList != null && i < nodeList.getLength(); i++) {
+			//
+			if ((node = nodeList.item(i)) == null) {
+				//
+				continue;
+				//
+			} // if
+				//
+			final Node n = node;
+			//
+			info(LOG, perform(
+					testAndApply(Objects::nonNull, getNodeValue(getNamedItem(getAttributes(node), "host")),
+							x -> HostAndPort.fromParts(x,
+									NumberUtils.toInt(getNodeValue(getNamedItem(getAttributes(n), "port")), 22)),
+							null),
+					new BasicCredentialsImpl(getNodeValue(getNamedItem(getAttributes(node), "user")),
+							getNodeValue(getNamedItem(getAttributes(node), "password"))),
+					testAndApply(x -> size(x) == 1,
+							testAndApply(x -> Boolean.logicalAnd(exists(x), isFile(x)),
+									testAndApply(Objects::nonNull,
+											getNodeValue(getNamedItem(getAttributes(node), "key")), File::new, null),
+									x -> loadKeyPairs(PuttyKeyUtils.DEFAULT_INSTANCE, null, toPath(x), null), null),
+							x -> new ArrayList<>(x).get(0), null),
+					file, remoteFolder));
+			//
+		} // for
+			//
+	}
+
+	private static boolean isTestMode() {
+		try {
+			return Class.forName("org.testng.annotations.Test") != null;
+		} catch (final ClassNotFoundException e) {
+			return false;
+		}
+	}
+
+	private static Node getNamedItem(final NamedNodeMap instance, final String name) {
+		return instance != null ? instance.getNamedItem(name) : null;
+	}
+
+	private static String getNodeValue(final Node instance) {
+		return instance != null ? instance.getNodeValue() : null;
+	}
+
+	private static NamedNodeMap getAttributes(final Node instance) {
+		return instance != null ? instance.getAttributes() : null;
+	}
+
+	private static <T> T cast(final Class<T> clz, final Object instance) {
+		return clz != null && clz.isInstance(instance) ? clz.cast(instance) : null;
+	}
+
+	private static Object evaluate(final XPath instance, final String string, final Object object, final QName qName)
+			throws XPathExpressionException {
+		return instance != null && object != null ? instance.evaluate(string, object, qName) : null;
+	}
+
 	private static Result perform(final HostAndPort hostAndPort,
 			final BasicCredentialsProvider basicCredentialsProvider, final KeyPair keyPair, final File file,
 			final String remoteFolderString) throws IOException {
@@ -176,7 +350,8 @@ public class SftpUploadBatch {
 						: null;
 						final InputStream is = testAndApply(x -> x != null && x.getPath() != null, file,
 								FileInputStream::new, null);
-						final OutputStream os = write(sftpClient, Objects.toString(remoteFolder))) {
+						final OutputStream os = file != null ? write(sftpClient, Objects.toString(remoteFolder))
+								: null) {
 					//
 					(result = new Result()).hostAndPort = hostAndPort;
 					//
@@ -187,7 +362,7 @@ public class SftpUploadBatch {
 					//
 					result.canonicalPath = canonicalPath(sftpClient, Objects.toString(remoteFolder));
 					//
-					result.stat = stat(sftpClient, Objects.toString(remoteFolder));
+					result.stat = file != null ? stat(sftpClient, Objects.toString(remoteFolder)) : null;
 					//
 				} // try
 					//
