@@ -44,6 +44,7 @@ import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.client.session.ClientSessionCreator;
 import org.apache.sshd.common.auth.BasicCredentialsImpl;
 import org.apache.sshd.common.auth.BasicCredentialsProvider;
+import org.apache.sshd.common.auth.UsernameHolder;
 import org.apache.sshd.common.config.keys.FilePasswordProvider;
 import org.apache.sshd.common.config.keys.loader.KeyPairResourceLoader;
 import org.apache.sshd.common.future.VerifiableFuture;
@@ -84,6 +85,14 @@ public class SftpUploadBatch {
 		//
 		if (result != null) {
 			//
+			final HostAndPort hostAndPort = result.hostAndPort;
+			//
+			info(LOG, "Host       ={}", getHost(hostAndPort));
+			//
+			info(LOG, "Port       ={}", getPort(hostAndPort));
+			//
+			info(LOG, "User       ={}", getUsername(result.usernameHolder));
+			//
 			info(LOG, "Path       ={}", result.canonicalPath);
 			//
 			info(LOG, "Size       ={}", result.copy);
@@ -98,7 +107,23 @@ public class SftpUploadBatch {
 			//
 	}
 
+	private static String getUsername(final UsernameHolder instance) {
+		return instance != null ? instance.getUsername() : null;
+	}
+
+	private static String getHost(final HostAndPort instance) {
+		return instance != null ? instance.getHost() : null;
+	}
+
+	private static Integer getPort(final HostAndPort instance) {
+		return instance != null && instance.hasPort() ? Integer.valueOf(instance.getPort()) : null;
+	}
+
 	private static class Result {
+
+		private HostAndPort hostAndPort = null;
+
+		private UsernameHolder usernameHolder = null;
 
 		private String canonicalPath = null;
 
@@ -122,8 +147,7 @@ public class SftpUploadBatch {
 			//
 			try (final ClientSession clientSession = testAndApply(
 					(a, b) -> Boolean.logicalAnd(a != null, StringUtils.isNotEmpty(b)),
-					basicCredentialsProvider != null ? basicCredentialsProvider.getUsername() : null,
-					hostAndPort != null ? hostAndPort.getHost() : null, (a,
+					getUsername(basicCredentialsProvider), hostAndPort != null ? hostAndPort.getHost() : null, (a,
 							b) -> getSession(verify(connect(sshClient, a, b,
 									hostAndPort != null && hostAndPort.hasPort() ? hostAndPort.getPort() : 22))),
 					null)) {
@@ -153,8 +177,12 @@ public class SftpUploadBatch {
 								FileInputStream::new, null);
 						final OutputStream os = write(sftpClient, Objects.toString(remoteFolder))) {
 					//
-					(result = new Result()).copy = testAndApply((a, b) -> Boolean.logicalAnd(a != null, b != null), is,
-							os, IOUtils::copy, null);
+					(result = new Result()).hostAndPort = hostAndPort;
+					//
+					result.usernameHolder = basicCredentialsProvider;
+					//
+					result.copy = testAndApply((a, b) -> Boolean.logicalAnd(a != null, b != null), is, os,
+							IOUtils::copy, null);
 					//
 					result.canonicalPath = canonicalPath(sftpClient, Objects.toString(remoteFolder));
 					//

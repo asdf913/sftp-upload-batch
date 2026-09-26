@@ -62,7 +62,7 @@ import io.github.toolfactory.narcissus.Narcissus;
 public class SftpUploadBatchTest {
 
 	private static Method METHOD_GET_NAME, METHOD_IS_SUCCESS, METHOD_COLLECT, METHOD_EXISTS, METHOD_IS_FILE,
-			METHOD_TO_PATH = null;
+			METHOD_TO_PATH, METHOD_GET_PORT = null;
 
 	@BeforeClass
 	static void beforeClass() throws Throwable {
@@ -80,6 +80,8 @@ public class SftpUploadBatchTest {
 		(METHOD_IS_FILE = clz.getDeclaredMethod("isFile", File.class)).setAccessible(true);
 		//
 		(METHOD_TO_PATH = clz.getDeclaredMethod("toPath", File.class)).setAccessible(true);
+		//
+		(METHOD_GET_PORT = clz.getDeclaredMethod("getPort", HostAndPort.class)).setAccessible(true);
 		//
 	}
 
@@ -460,8 +462,11 @@ public class SftpUploadBatchTest {
 									Arrays.equals(parameterTypes,
 											new Class<?>[] { StringBuilder.class, Character.TYPE })))
 					|| Boolean.logicalAnd(Objects.equals(name, "perform"),
-							Arrays.equals(parameterTypes, new Class<?>[] { HostAndPort.class,
-									BasicCredentialsProvider.class, KeyPair.class, File.class, String.class }))) {
+							Arrays.equals(parameterTypes,
+									new Class<?>[] { HostAndPort.class, BasicCredentialsProvider.class, KeyPair.class,
+											File.class, String.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "getPort"),
+							Arrays.equals(parameterTypes, new Class<?>[] { HostAndPort.class }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
@@ -563,6 +568,13 @@ public class SftpUploadBatchTest {
 	void testToPath() throws IllegalAccessException, InvocationTargetException {
 		//
 		Assert.assertNotNull(invoke(METHOD_TO_PATH, null, file));
+		//
+	}
+
+	@Test
+	void testGetPort() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertNull(invoke(METHOD_GET_PORT, null, HostAndPort.fromHost("")));
 		//
 	}
 
