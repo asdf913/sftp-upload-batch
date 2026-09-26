@@ -233,7 +233,7 @@ public class SftpUploadBatch {
 		//
 		final boolean isHeadless = GraphicsEnvironment.isHeadless();
 		//
-		if ((file == null || !exists(file) || !isFile(file)) && !isTestMode() && !isHeadless
+		if ((Boolean.logicalOr(!exists(file), !isFile(file))) && !isTestMode() && !isHeadless
 				&& jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
 			//
 			file = jfc.getSelectedFile();
