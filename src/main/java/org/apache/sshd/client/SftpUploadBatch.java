@@ -71,9 +71,6 @@ public class SftpUploadBatch {
 		//
 		final Map<String, String> map = toMap(args);
 		//
-		testAndApply(Objects::nonNull, get(map, "host"),
-				x -> HostAndPort.fromParts(x, NumberUtils.toInt(get(map, "port"), 22)), null);
-		//
 		final Result result = perform(
 				testAndApply(Objects::nonNull, get(map, "host"),
 						x -> HostAndPort.fromParts(x, NumberUtils.toInt(get(map, "port"), 22)), null),
