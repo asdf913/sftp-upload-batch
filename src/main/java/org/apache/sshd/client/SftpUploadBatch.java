@@ -42,6 +42,8 @@ import org.apache.sshd.client.keyverifier.AcceptAllServerKeyVerifier;
 import org.apache.sshd.client.keyverifier.ServerKeyVerifier;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.client.session.ClientSessionCreator;
+import org.apache.sshd.common.auth.BasicCredentialsImpl;
+import org.apache.sshd.common.auth.BasicCredentialsProvider;
 import org.apache.sshd.common.config.keys.FilePasswordProvider;
 import org.apache.sshd.common.config.keys.loader.KeyPairResourceLoader;
 import org.apache.sshd.common.future.VerifiableFuture;
@@ -55,6 +57,8 @@ import org.apache.sshd.sftp.client.SftpClientFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.net.HostAndPort;
+
 import io.github.toolfactory.narcissus.Narcissus;
 
 public class SftpUploadBatch {
@@ -67,6 +71,52 @@ public class SftpUploadBatch {
 		//
 		final Map<String, String> map = toMap(args);
 		//
+		testAndApply(Objects::nonNull, get(map, "host"),
+				x -> HostAndPort.fromParts(x, NumberUtils.toInt(get(map, "port"), 22)), null);
+		//
+		final Result result = perform(
+				testAndApply(Objects::nonNull, get(map, "host"),
+						x -> HostAndPort.fromParts(x, NumberUtils.toInt(get(map, "port"), 22)), null),
+				new BasicCredentialsImpl(get(map, "user"), get(map, "password")),
+				testAndApply(x -> size(x) == 1,
+						testAndApply(x -> Boolean.logicalAnd(exists(x), isFile(x)),
+								testAndApply(Objects::nonNull, get(map, "key"), File::new, null),
+								x -> loadKeyPairs(PuttyKeyUtils.DEFAULT_INSTANCE, null, toPath(x), null), null),
+						x -> new ArrayList<>(x).get(0), null),
+				testAndApply(Objects::nonNull, get(map, "file"), File::new, null), get(map, "remoteFolder"));
+		//
+		if (result != null) {
+			//
+			info(LOG, "Path       ={}", result.canonicalPath);
+			//
+			info(LOG, "Size       ={}", result.copy);
+			//
+			final Attributes stat = result.stat;
+			//
+			info(LOG, "Create Time={}", getCreateTime(stat));
+			//
+			info(LOG, "Modify Time={}", getModifyTime(stat));
+			//
+		} // if
+			//
+	}
+
+	private static class Result {
+
+		private String canonicalPath = null;
+
+		private Integer copy = null;
+
+		private Attributes stat = null;
+
+	}
+
+	private static Result perform(final HostAndPort hostAndPort,
+			final BasicCredentialsProvider basicCredentialsProvider, final KeyPair keyPair, final File file,
+			final String remoteFolderString) throws IOException {
+		//
+		Result result = null;
+		//
 		try (final SshClient sshClient = SshClient.setUpDefaultClient()) {
 			//
 			setServerKeyVerifier(sshClient, AcceptAllServerKeyVerifier.INSTANCE);
@@ -74,48 +124,44 @@ public class SftpUploadBatch {
 			start(sshClient);
 			//
 			try (final ClientSession clientSession = testAndApply(
-					(a, b) -> Boolean.logicalAnd(a != null, StringUtils.isNotEmpty(b)), get(map, "user"),
-					get(map, "host"),
-					(a, b) -> getSession(verify(connect(sshClient, a, b, NumberUtils.toInt(get(map, "port"), 22)))),
+					(a, b) -> Boolean.logicalAnd(a != null, StringUtils.isNotEmpty(b)),
+					basicCredentialsProvider != null ? basicCredentialsProvider.getUsername() : null,
+					hostAndPort != null ? hostAndPort.getHost() : null, (a,
+							b) -> getSession(verify(connect(sshClient, a, b,
+									hostAndPort != null && hostAndPort.hasPort() ? hostAndPort.getPort() : 22))),
 					null)) {
 				//
-				testAndAccept(Objects::nonNull, get(map, "password"), x -> addPasswordIdentity(clientSession, x));
-				//
 				testAndAccept(Objects::nonNull,
-						testAndApply(x -> size(x) == 1,
-								testAndApply(x -> Boolean.logicalAnd(exists(x), isFile(x)),
-										testAndApply(Objects::nonNull, get(map, "key"), File::new, null),
-										x -> loadKeyPairs(PuttyKeyUtils.DEFAULT_INSTANCE, null, toPath(x), null), null),
-								x -> new ArrayList<>(x).get(0), null),
-						x -> addPublicKeyIdentity(clientSession, x));
+						basicCredentialsProvider != null ? basicCredentialsProvider.getPassword() : null,
+						x -> addPasswordIdentity(clientSession, x));
 				//
-				final File file = testAndApply(Objects::nonNull, get(map, "file"), File::new, null);
+				testAndAccept(Objects::nonNull, keyPair, x -> addPublicKeyIdentity(clientSession, x));
 				//
-				final StringBuilder remoteFolder = testAndApply(Objects::nonNull, get(map, "remoteFolder"),
-						StringBuilder::new, null);
+				final Field field = testAndApply(x -> size(x) == 1,
+						collect(filter(stream(testAndApply(Objects::nonNull, getClass(remoteFolderString),
+								FieldUtils::getAllFieldsList, null)), f -> Objects.equals(getName(f), VALUE)),
+								Collectors.toList()),
+						x -> get(x, 0), null);
+				//
+				final StringBuilder remoteFolder = testAndApply(
+						x -> x != null && (field == null || Narcissus.getField(remoteFolderString, field) != null),
+						remoteFolderString, StringBuilder::new, null);
 				//
 				append(append(remoteFolder, '/'), getName(file));
-				//
-				Integer copy = null;
 				//
 				try (final SftpClient sftpClient = isSuccess(verify(auth(clientSession)))
 						? createSftpClient(SftpClientFactory.instance(), clientSession)
 						: null;
-						final InputStream is = testAndApply(Objects::nonNull, file, FileInputStream::new, null);
+						final InputStream is = testAndApply(x -> x != null && x.getPath() != null, file,
+								FileInputStream::new, null);
 						final OutputStream os = write(sftpClient, Objects.toString(remoteFolder))) {
 					//
-					copy = testAndApply((a, b) -> Boolean.logicalAnd(a != null, b != null), is, os, IOUtils::copy,
-							null);
+					(result = new Result()).copy = testAndApply((a, b) -> Boolean.logicalAnd(a != null, b != null), is,
+							os, IOUtils::copy, null);
 					//
-					info(LOG, "Path       ={}", canonicalPath(sftpClient, Objects.toString(remoteFolder)));
+					result.canonicalPath = canonicalPath(sftpClient, Objects.toString(remoteFolder));
 					//
-					info(LOG, "Size       ={}", copy);
-					//
-					final Attributes stat = stat(sftpClient, Objects.toString(remoteFolder));
-					//
-					info(LOG, "Create Time={}", getCreateTime(stat));
-					//
-					info(LOG, "Modify Time={}", getModifyTime(stat));
+					result.stat = stat(sftpClient, Objects.toString(remoteFolder));
 					//
 				} // try
 					//
@@ -123,6 +169,7 @@ public class SftpUploadBatch {
 				//
 		} // try
 			//
+		return result;
 	}
 
 	private static void info(final Logger instance, final String format, final Object object) {

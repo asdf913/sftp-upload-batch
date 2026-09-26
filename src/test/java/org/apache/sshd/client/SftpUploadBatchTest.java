@@ -10,6 +10,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.nio.file.FileSystems;
 import java.nio.file.Paths;
+import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,6 +34,9 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.sshd.client.future.AuthFuture;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.client.session.ClientSessionCreator;
+import org.apache.sshd.common.auth.BasicCredentialsProvider;
+import org.apache.sshd.common.auth.PasswordHolder;
+import org.apache.sshd.common.auth.UsernameHolder;
 import org.apache.sshd.common.config.keys.loader.KeyPairResourceLoader;
 import org.apache.sshd.common.file.virtualfs.VirtualFileSystemFactory;
 import org.apache.sshd.common.future.VerifiableFuture;
@@ -50,6 +54,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.net.HostAndPort;
 import com.google.common.reflect.Reflection;
 
 import io.github.toolfactory.narcissus.Narcissus;
@@ -172,6 +177,14 @@ public class SftpUploadBatchTest {
 				return null;
 				//
 			} else if (proxy instanceof KeyPairResourceLoader && Objects.equals(name, "loadKeyPairs")) {
+				//
+				return null;
+				//
+			} else if (proxy instanceof UsernameHolder && Objects.equals(name, "getUsername")) {
+				//
+				return null;
+				//
+			} else if (proxy instanceof PasswordHolder && Objects.equals(name, "getPassword")) {
 				//
 				return null;
 				//
@@ -315,7 +328,10 @@ public class SftpUploadBatchTest {
 			//
 			toString = Objects.toString(m);
 			//
-			if (contains(Arrays.asList(Integer.TYPE, Boolean.TYPE), m.getReturnType())) {
+			if (contains(Arrays.asList(Integer.TYPE, Boolean.TYPE), m.getReturnType())
+					|| Boolean.logicalAnd(Objects.equals(getName(m), "perform"),
+							Arrays.equals(parameterTypes, new Class<?>[] { HostAndPort.class,
+									BasicCredentialsProvider.class, KeyPair.class, File.class, String.class }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
@@ -435,11 +451,17 @@ public class SftpUploadBatchTest {
 			toString = Objects.toString(m);
 			//
 			if (contains(Arrays.asList(Boolean.TYPE, Integer.TYPE), m.getReturnType())
-					|| Boolean.logicalAnd(Objects.equals(name = getName(m), "getClass"),
-							Arrays.equals(parameterTypes, new Class<?>[] { Object.class }))
-					|| Boolean.logicalAnd(Objects.equals(name, "append"), Boolean.logicalOr(
-							Arrays.equals(parameterTypes, new Class<?>[] { StringBuilder.class, Object.class }),
-							Arrays.equals(parameterTypes, new Class<?>[] { StringBuilder.class, Character.TYPE })))) {
+					|| Boolean
+							.logicalAnd(Objects.equals(name = getName(m), "getClass"), Arrays.equals(parameterTypes,
+									new Class<?>[] { Object.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "append"),
+							Boolean.logicalOr(
+									Arrays.equals(parameterTypes, new Class<?>[] { StringBuilder.class, Object.class }),
+									Arrays.equals(parameterTypes,
+											new Class<?>[] { StringBuilder.class, Character.TYPE })))
+					|| Boolean.logicalAnd(Objects.equals(name, "perform"),
+							Arrays.equals(parameterTypes, new Class<?>[] { HostAndPort.class,
+									BasicCredentialsProvider.class, KeyPair.class, File.class, String.class }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
