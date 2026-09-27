@@ -86,7 +86,7 @@ public class SftpUploadBatchTest {
 	private static Method METHOD_GET_NAME, METHOD_IS_SUCCESS, METHOD_COLLECT, METHOD_EXISTS, METHOD_IS_FILE,
 			METHOD_TO_PATH, METHOD_GET_PORT, METHOD_NEW_DOCUMENT_BUILDER, METHOD_PERFORM, METHOD_NEW_XPATH, METHOD_CAST,
 			METHOD_ADD_ACTION_LISTENER, METHOD_GET_ABSOLUTE_PATH, METHOD_SET_TEXT, METHOD_GET_TEXT, METHOD_SET_EDITABLE,
-			METHOD_FOR_EACH, METHOD_ENDS_WITH, METHOD_MATCHER, METHOD_FIND, METHOD_GROUP = null;
+			METHOD_FOR_EACH, METHOD_ENDS_WITH, METHOD_MATCHER, METHOD_FIND, METHOD_GROUP, METHOD_DESTORY = null;
 
 	@BeforeClass
 	static void beforeClass() throws Throwable {
@@ -138,6 +138,8 @@ public class SftpUploadBatchTest {
 		(METHOD_FIND = clz.getDeclaredMethod("find", Matcher.class)).setAccessible(true);
 		//
 		(METHOD_GROUP = clz.getDeclaredMethod("group", MatchResult.class)).setAccessible(true);
+		//
+		(METHOD_DESTORY = clz.getDeclaredMethod("destroy", Process.class)).setAccessible(true);
 		//
 	}
 
@@ -592,6 +594,10 @@ public class SftpUploadBatchTest {
 					//
 					add(collection, Narcissus.allocateInstance(JButton.class));
 					//
+				} else if (Objects.equals(parameterType, Process.class)) {
+					//
+					add(collection, Narcissus.allocateInstance(Class.forName("java.lang.ProcessImpl")));
+					//
 				} else {
 					//
 					add(collection, Narcissus.allocateInstance(parameterType));
@@ -940,6 +946,17 @@ public class SftpUploadBatchTest {
 		//
 		Assert.assertEquals(invoke(METHOD_GROUP, null, matcher), one);
 		//
+	}
+
+	@Test
+	void testProcess() throws IllegalAccessException, InvocationTargetException, IOException {
+		//
+		if (Objects.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.LinuxFileSystem")) {
+			//
+			Assert.assertNull(invoke(METHOD_DESTORY, null, new ProcessBuilder("whoami").start()));
+			//
+		} // if
+			//
 	}
 
 }

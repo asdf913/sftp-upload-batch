@@ -172,12 +172,8 @@ public class SftpUploadBatch extends JPanel implements ActionListener {
 					//
 				} finally {
 					//
-					if (process != null) {
-						//
-						process.destroy();
-						//
-					} // if
-						//
+					destroy(process);
+					//
 				} // try
 					//
 			} // if
@@ -347,6 +343,28 @@ public class SftpUploadBatch extends JPanel implements ActionListener {
 				//
 			} // if
 				//
+		} // if
+			//
+	}
+
+	private static void destroy(final Process instance) {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						x -> Objects.equals(getName(x), "processHandle")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (field == null || Narcissus.getField(instance, field) != null) {
+			//
+			instance.destroy();
+			//
 		} // if
 			//
 	}
