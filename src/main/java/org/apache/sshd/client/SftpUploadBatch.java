@@ -218,64 +218,12 @@ public class SftpUploadBatch extends JPanel implements ActionListener {
 		//
 		if (Objects.equals(source, btnKey)) {
 			//
-			JFileChooser jfc = null;
+			showOpenDialogAndSetText(new File("."), tfKey);
 			//
-			try {
-				//
-				jfc = new JFileChooser(new File(".").getCanonicalFile());
-				//
-			} catch (final IOException e) {
-				//
-				throw new RuntimeException(e);
-				//
-			} // try
-				//
-			if (jfc != null && !GraphicsEnvironment.isHeadless() && !isTestMode()) {
-				//
-				final int showOpenDialog = jfc.showOpenDialog(null);
-				//
-				if (showOpenDialog == JFileChooser.APPROVE_OPTION) {
-					//
-					setText(tfKey, getAbsolutePath(jfc.getSelectedFile()));
-					//
-				} else if (showOpenDialog == JFileChooser.CANCEL_OPTION) {
-					//
-					setText(tfKey, null);
-					//
-				} // if
-					//
-			} // if
-				//
 		} else if (Objects.equals(source, btnFile)) {
 			//
-			JFileChooser jfc = null;
+			showOpenDialogAndSetText(new File("."), tfFile);
 			//
-			try {
-				//
-				jfc = new JFileChooser(new File(".").getCanonicalFile());
-				//
-			} catch (final IOException e) {
-				//
-				throw new RuntimeException(e);
-				//
-			} // try
-				//
-			if (jfc != null && !GraphicsEnvironment.isHeadless() && !isTestMode()) {
-				//
-				final int showOpenDialog = jfc.showOpenDialog(null);
-				//
-				if (showOpenDialog == JFileChooser.APPROVE_OPTION) {
-					//
-					setText(tfFile, getAbsolutePath(jfc.getSelectedFile()));
-					//
-				} else if (showOpenDialog == JFileChooser.CANCEL_OPTION) {
-					//
-					setText(tfFile, null);
-					//
-				} // if
-					//
-			} // if
-				//
 		} else if (Objects.equals(source, btnExecute)) {
 			//
 			try {
@@ -299,6 +247,42 @@ public class SftpUploadBatch extends JPanel implements ActionListener {
 				//
 		} // if
 			//
+	}
+
+	private static void showOpenDialogAndSetText(final File file, final JTextComponent jtc) {
+		//
+		JFileChooser jfc = null;
+		//
+		try {
+			//
+			jfc = new JFileChooser(getCanonicalFile(file));
+			//
+		} catch (final IOException e) {
+			//
+			throw new RuntimeException(e);
+			//
+		} // try
+			//
+		if (jfc != null && !GraphicsEnvironment.isHeadless() && !isTestMode()) {
+			//
+			final int showOpenDialog = jfc.showOpenDialog(null);
+			//
+			if (showOpenDialog == JFileChooser.APPROVE_OPTION) {
+				//
+				setText(jtc, getAbsolutePath(jfc.getSelectedFile()));
+				//
+			} else if (showOpenDialog == JFileChooser.CANCEL_OPTION) {
+				//
+				setText(jtc, null);
+				//
+			} // if
+				//
+		} // if
+			//
+	}
+
+	private static File getCanonicalFile(final File instance) throws IOException {
+		return instance != null && instance.getPath() != null ? instance.getCanonicalFile() : null;
 	}
 
 	private static Object getSource(final EventObject instance) {
