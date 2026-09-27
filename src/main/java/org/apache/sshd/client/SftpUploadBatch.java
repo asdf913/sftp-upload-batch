@@ -1,6 +1,8 @@
 package org.apache.sshd.client;
 
 import java.awt.GraphicsEnvironment;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -9,12 +11,14 @@ import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Proxy;
+import java.nio.file.FileSystems;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,13 +26,23 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.swing.AbstractButton;
+import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import javax.swing.WindowConstants;
+import javax.swing.text.JTextComponent;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -78,15 +92,96 @@ import org.xml.sax.SAXException;
 import com.google.common.net.HostAndPort;
 
 import io.github.toolfactory.narcissus.Narcissus;
+import net.miginfocom.swing.MigLayout;
 
-public class SftpUploadBatch {
+public class SftpUploadBatch extends JPanel implements ActionListener {
+
+	private static final long serialVersionUID = -7062996438496794210L;
 
 	private static final Logger LOG = LoggerFactory.getLogger(SftpUploadBatch.class);
 
 	private static final String VALUE = "value";
 
+	private JTextComponent tfHost, tfPort, tfUser, tfPassword, tfKey, tfFile, tfRemoteFolder = null;
+
+	private AbstractButton btnKey, btnFile, btnExecute = null;
+
+	private SftpUploadBatch() {
+		//
+	}
+
 	public static void main(final String[] args) throws Exception {
 		//
+		if (Objects.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.MacOSXFileSystem")
+				&& System.console() == null && !isTestMode()) {
+			//
+			final JFrame jFrame = !GraphicsEnvironment.isHeadless() ? new JFrame() : null;
+			//
+			final SftpUploadBatch instance = new SftpUploadBatch();
+			//
+			instance.setLayout(new MigLayout());
+			//
+			instance.add(new JLabel("Host"));
+			//
+			final String wrap = "wrap";
+			//
+			instance.add(instance.tfHost = new JTextField(), String.format("%1$s,wmin %2$s", wrap, 100));
+			//
+			instance.add(new JLabel("Port"));
+			//
+			final String growx = "growx";
+			//
+			instance.add(instance.tfPort = new JTextField(), StringUtils.joinWith(",", growx, wrap));
+			//
+			instance.add(new JLabel("User"));
+			//
+			instance.add(instance.tfUser = new JTextField(), StringUtils.joinWith(",", growx, wrap));
+			//
+			instance.add(new JLabel("Password"));
+			//
+			instance.add(instance.tfPassword = new JPasswordField(), StringUtils.joinWith(",", growx, wrap));
+			//
+			instance.add(new JLabel("Key"));
+			//
+			instance.add(instance.tfKey = new JTextField(), growx);
+			//
+			instance.add(instance.btnKey = new JButton("Choose Key"), wrap);
+			//
+			instance.add(new JLabel("File"));
+			//
+			instance.add(instance.tfFile = new JTextField(), growx);
+			//
+			instance.add(instance.btnFile = new JButton("Choose File"), wrap);
+			//
+			instance.add(new JLabel("Remote Folder"));
+			//
+			instance.add(instance.tfRemoteFolder = new JTextField(), StringUtils.joinWith(",", growx, wrap));
+			//
+			instance.add(new JLabel());
+			//
+			instance.add(instance.btnExecute = new JButton("Upload"), wrap);
+			//
+			forEach(Arrays.asList(instance.tfKey, instance.tfFile), x -> setEditable(x, false));
+			//
+			forEach(Arrays.asList(instance.btnKey, instance.btnFile, instance.btnExecute),
+					x -> addActionListener(x, instance));
+			//
+			if (jFrame != null) {
+				//
+				jFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+				//
+				jFrame.add(instance);
+				//
+				jFrame.pack();
+				//
+				jFrame.setVisible(true);
+				//
+			} // if
+				//
+			return;
+			//
+		} // if
+			//
 		final Map<String, String> map = toMap(args);
 		//
 		final File file = testAndApply(Objects::nonNull, get(map, "file"), File::new, null);
@@ -113,6 +208,194 @@ public class SftpUploadBatch {
 			//
 		} // if
 			//
+	}
+
+	@Override
+	public void actionPerformed(final ActionEvent evt) {
+		//
+		final Object source = evt != null ? evt.getSource() : null;
+		//
+		if (Objects.equals(source, btnKey)) {
+			//
+			JFileChooser jfc = null;
+			//
+			try {
+				//
+				jfc = new JFileChooser(new File(".").getCanonicalFile());
+				//
+			} catch (final IOException e) {
+				//
+				throw new RuntimeException(e);
+				//
+			} // try
+				//
+			if (jfc != null && !GraphicsEnvironment.isHeadless() && !isTestMode()) {
+				//
+				final int showOpenDialog = jfc.showOpenDialog(null);
+				//
+				if (showOpenDialog == JFileChooser.APPROVE_OPTION) {
+					//
+					setText(tfKey, getAbsolutePath(jfc.getSelectedFile()));
+					//
+				} else if (showOpenDialog == JFileChooser.CANCEL_OPTION) {
+					//
+					setText(tfKey, null);
+					//
+				} // if
+					//
+			} // if
+				//
+		} else if (Objects.equals(source, btnFile)) {
+			//
+			JFileChooser jfc = null;
+			//
+			try {
+				//
+				jfc = new JFileChooser(new File(".").getCanonicalFile());
+				//
+			} catch (final IOException e) {
+				//
+				throw new RuntimeException(e);
+				//
+			} // try
+				//
+			if (jfc != null && !GraphicsEnvironment.isHeadless() && !isTestMode()) {
+				//
+				final int showOpenDialog = jfc.showOpenDialog(null);
+				//
+				if (showOpenDialog == JFileChooser.APPROVE_OPTION) {
+					//
+					setText(tfFile, getAbsolutePath(jfc.getSelectedFile()));
+					//
+				} else if (showOpenDialog == JFileChooser.CANCEL_OPTION) {
+					//
+					setText(tfFile, null);
+					//
+				} // if
+					//
+			} // if
+				//
+		} else if (Objects.equals(source, btnExecute)) {
+			//
+			try {
+				//
+				info(LOG, perform(
+						testAndApply(Objects::nonNull, getText(tfHost),
+								x -> HostAndPort.fromParts(x, NumberUtils.toInt(getText(tfPort), 22)), null),
+						new BasicCredentialsImpl(getText(tfUser), getText(tfPassword)),
+						testAndApply(x -> size(x) == 1,
+								testAndApply(x -> Boolean.logicalAnd(exists(x), isFile(x)),
+										testAndApply(Objects::nonNull, getText(tfKey), File::new, null),
+										x -> loadKeyPairs(PuttyKeyUtils.DEFAULT_INSTANCE, null, toPath(x), null), null),
+								x -> new ArrayList<>(x).get(0), null),
+						testAndApply(Objects::nonNull, getText(tfFile), File::new, null), getText(tfRemoteFolder)));
+				//
+			} catch (final Exception e) {
+				//
+				throw new RuntimeException(e);
+				//
+			} // try
+				//
+		} // if
+			//
+	}
+
+	private static void addActionListener(final AbstractButton instance, final ActionListener actionListener) {
+		//
+		if (instance == null || actionListener == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "listenerList")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (field == null || Narcissus.getField(instance, field) != null) {
+			//
+			instance.addActionListener(actionListener);
+			//
+		} // if
+			//
+	}
+
+	private static String getAbsolutePath(final File instance) {
+		return instance != null && instance.getPath() != null ? instance.getAbsolutePath() : null;
+	}
+
+	private static void setText(final JTextComponent instance, final String text) {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "model")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (field == null || Narcissus.getField(instance, field) != null) {
+			//
+			instance.setText(text);
+			//
+		} // if
+			//
+	}
+
+	private static String getText(final JTextComponent instance) {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "model")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return field == null || Narcissus.getField(instance, field) != null ? instance.getText() : null;
+		//
+	}
+
+	private static void setEditable(final JTextComponent instance, final boolean editable) {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "objectLock")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (field == null || Narcissus.getField(instance, field) != null) {
+			//
+			instance.setEditable(editable);
+			//
+		} // if
+			//
+	}
+
+	private static <T> void forEach(final Iterable<T> instance, final Consumer<? super T> action) {
+		if (instance != null && (action != null || Proxy.isProxyClass(getClass(instance)))) {
+			instance.forEach(action);
+		}
+	}
+
+	private static String getName(final Class<?> instance) {
+		return instance != null ? instance.getName() : null;
 	}
 
 	private static XPath newXPath(final XPathFactory instance) {

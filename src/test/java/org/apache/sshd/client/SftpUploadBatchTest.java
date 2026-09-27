@@ -1,5 +1,7 @@
 package org.apache.sshd.client;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -8,6 +10,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.nio.file.FileSystems;
 import java.nio.file.Paths;
 import java.security.KeyPair;
@@ -20,10 +23,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import javax.swing.AbstractButton;
+import javax.swing.JButton;
+import javax.swing.JTextField;
+import javax.swing.text.JTextComponent;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
@@ -72,8 +80,9 @@ import io.github.toolfactory.narcissus.Narcissus;
 public class SftpUploadBatchTest {
 
 	private static Method METHOD_GET_NAME, METHOD_IS_SUCCESS, METHOD_COLLECT, METHOD_EXISTS, METHOD_IS_FILE,
-			METHOD_TO_PATH, METHOD_GET_PORT, METHOD_NEW_DOCUMENT_BUILDER, METHOD_PERFORM, METHOD_NEW_XPATH,
-			METHOD_CAST = null;
+			METHOD_TO_PATH, METHOD_GET_PORT, METHOD_NEW_DOCUMENT_BUILDER, METHOD_PERFORM, METHOD_NEW_XPATH, METHOD_CAST,
+			METHOD_ADD_ACTION_LISTENER, METHOD_GET_ABSOLUTE_PATH, METHOD_SET_TEXT, METHOD_GET_TEXT, METHOD_SET_EDITABLE,
+			METHOD_FOR_EACH = null;
 
 	@BeforeClass
 	static void beforeClass() throws Throwable {
@@ -103,6 +112,20 @@ public class SftpUploadBatchTest {
 		(METHOD_NEW_XPATH = clz.getDeclaredMethod("newXPath", XPathFactory.class)).setAccessible(true);
 		//
 		(METHOD_CAST = clz.getDeclaredMethod("cast", Class.class, Object.class)).setAccessible(true);
+		//
+		(METHOD_ADD_ACTION_LISTENER = clz.getDeclaredMethod("addActionListener", AbstractButton.class,
+				ActionListener.class)).setAccessible(true);
+		//
+		(METHOD_GET_ABSOLUTE_PATH = clz.getDeclaredMethod("getAbsolutePath", File.class)).setAccessible(true);
+		//
+		(METHOD_SET_TEXT = clz.getDeclaredMethod("setText", JTextComponent.class, String.class)).setAccessible(true);
+		//
+		(METHOD_GET_TEXT = clz.getDeclaredMethod("getText", JTextComponent.class)).setAccessible(true);
+		//
+		(METHOD_SET_EDITABLE = clz.getDeclaredMethod("setEditable", JTextComponent.class, Boolean.TYPE))
+				.setAccessible(true);
+		//
+		(METHOD_FOR_EACH = clz.getDeclaredMethod("forEach", Iterable.class, Consumer.class)).setAccessible(true);
 		//
 	}
 
@@ -259,8 +282,12 @@ public class SftpUploadBatchTest {
 
 	private RandomStringUtils randomStringUtils = null;
 
+	private SftpUploadBatch instance = null;
+
+	private JTextComponent jTextComponent = null;
+
 	@BeforeMethod
-	void beforeMethod() throws IOException {
+	void beforeMethod() throws Throwable {
 		//
 		if ((sshServer = SshServer.setUpDefaultServer()) != null) {
 			//
@@ -300,6 +327,10 @@ public class SftpUploadBatchTest {
 		file = new File("pom.xml");
 		//
 		randomStringUtils = RandomStringUtils.secure();
+		//
+		instance = cast(SftpUploadBatch.class, Narcissus.allocateInstance(SftpUploadBatch.class));
+		//
+		jTextComponent = new JTextField();
 		//
 	}
 
@@ -354,6 +385,8 @@ public class SftpUploadBatchTest {
 		//
 		Collection<Object> collection = null;
 		//
+		Object[] os = null;
+		//
 		for (int i = 0; ms != null && i < ms.length; i++) {
 			//
 			if ((m = ArrayUtils.get(ms, i)) == null || m.isSynthetic()
@@ -375,6 +408,10 @@ public class SftpUploadBatchTest {
 					//
 					add(collection, Character.valueOf(' '));
 					//
+				} else if (Objects.equals(parameterType, Boolean.TYPE)) {
+					//
+					add(collection, Boolean.TRUE);
+					//
 				} else {
 					//
 					add(collection, null);
@@ -383,7 +420,10 @@ public class SftpUploadBatchTest {
 					//
 			} // for
 				//
-			result = Narcissus.invokeStaticMethod(m, toArray(collection));
+			os = toArray(collection);
+			//
+			result = Modifier.isStatic(m.getModifiers()) ? Narcissus.invokeStaticMethod(m, os)
+					: Narcissus.invokeMethod(instance, m, os);
 			//
 			toString = Objects.toString(m);
 			//
@@ -437,6 +477,8 @@ public class SftpUploadBatchTest {
 		String toString, name = null;
 		//
 		Collection<Object> collection = null;
+		//
+		Object[] os = null;
 		//
 		for (int i = 0; ms != null && i < ms.length; i++) {
 			//
@@ -497,6 +539,10 @@ public class SftpUploadBatchTest {
 					//
 					add(collection, Character.valueOf(' '));
 					//
+				} else if (Objects.equals(parameterType, Boolean.TYPE)) {
+					//
+					add(collection, Boolean.TRUE);
+					//
 				} else if (Objects.equals(parameterType, Class.class)) {
 					//
 					add(collection, Class.class);
@@ -514,6 +560,14 @@ public class SftpUploadBatchTest {
 					//
 					add(collection, Narcissus.allocateInstance(getClass(DocumentBuilderFactory.newInstance())));
 					//
+				} else if (Objects.equals(parameterType, JTextComponent.class)) {
+					//
+					add(collection, Narcissus.allocateInstance(JTextField.class));
+					//
+				} else if (Objects.equals(parameterType, AbstractButton.class)) {
+					//
+					add(collection, Narcissus.allocateInstance(JButton.class));
+					//
 				} else {
 					//
 					add(collection, Narcissus.allocateInstance(parameterType));
@@ -522,7 +576,10 @@ public class SftpUploadBatchTest {
 					//
 			} // for
 				//
-			result = Narcissus.invokeStaticMethod(m, toArray(collection));
+			os = toArray(collection);
+			//
+			result = Modifier.isStatic(m.getModifiers()) ? Narcissus.invokeStaticMethod(m, os)
+					: Narcissus.invokeMethod(instance, m, os);
 			//
 			toString = Objects.toString(m);
 			//
@@ -540,7 +597,9 @@ public class SftpUploadBatchTest {
 									new Class<?>[] { HostAndPort.class, BasicCredentialsProvider.class, KeyPair.class,
 											File.class, String.class }))
 					|| Boolean.logicalAnd(Objects.equals(name, "getPort"),
-							Arrays.equals(parameterTypes, new Class<?>[] { HostAndPort.class }))) {
+							Arrays.equals(parameterTypes, new Class<?>[] { HostAndPort.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "getName"),
+							Arrays.equals(parameterTypes, new Class<?>[] { Class.class }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
@@ -731,6 +790,83 @@ public class SftpUploadBatchTest {
 		} catch (final InvocationTargetException e) {
 			throw e.getTargetException();
 		}
+	}
+
+	@Test
+	public void testActionPerformed() throws IllegalAccessException {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+			// btnFile
+			//
+		final AbstractButton btnFile = new JButton();
+		//
+		FieldUtils.writeDeclaredField(instance, "btnFile", btnFile, true);
+		//
+		instance.actionPerformed(new ActionEvent(btnFile, 0, null));
+		//
+		// btnFile
+		//
+		final AbstractButton btnExecute = new JButton();
+		//
+		FieldUtils.writeDeclaredField(instance, "btnExecute", btnExecute, true);
+		//
+		instance.actionPerformed(new ActionEvent(btnExecute, 0, null));
+		//
+	}
+
+	@Test
+	void testAddActionListener() throws IllegalAccessException, InvocationTargetException {
+		//
+		final AbstractButton abstractButton = new JButton();
+		//
+		Assert.assertNull(invoke(METHOD_ADD_ACTION_LISTENER, null, abstractButton, null));
+		//
+		Assert.assertNull(invoke(METHOD_ADD_ACTION_LISTENER, null, abstractButton,
+				Reflection.newProxy(ActionListener.class, ObjectUtils.getIfNull(ih, IH::new))));
+		//
+	}
+
+	@Test
+	void testGetAbsolutePath() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertNotNull(invoke(METHOD_GET_ABSOLUTE_PATH, null, file));
+		//
+	}
+
+	@Test
+	void testSetText() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertNull(invoke(METHOD_SET_TEXT, null, jTextComponent, null));
+		//
+	}
+
+	@Test
+	void testGetText() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertNotNull(invoke(METHOD_GET_TEXT, null, jTextComponent));
+		//
+	}
+
+	@Test
+	void testSetEditable() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertNull(invoke(METHOD_SET_EDITABLE, null, jTextComponent, false));
+		//
+	}
+
+	@Test
+	void testForEach() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertNull(invoke(METHOD_FOR_EACH, null,
+				Reflection.newProxy(Iterable.class, ObjectUtils.getIfNull(ih, IH::new)), null));
+		//
+		Assert.assertNull(invoke(METHOD_FOR_EACH, null, Collections.emptyList(), null));
+		//
 	}
 
 }
