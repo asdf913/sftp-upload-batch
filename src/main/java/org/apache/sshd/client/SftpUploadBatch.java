@@ -8,6 +8,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Proxy;
@@ -103,9 +107,21 @@ public class SftpUploadBatch extends JPanel implements ActionListener {
 
 	private static final String VALUE = "value";
 
-	private JTextComponent tfHost, tfPort, tfUser, tfPassword, tfKey, tfFile, tfRemoteFolder = null;
+	@Target(ElementType.FIELD)
+	@Retention(RetentionPolicy.RUNTIME)
+	private @interface Note {
+		String value();
+	}
 
-	private AbstractButton btnKey, btnFile, btnExecute = null;
+	@Note("Host")
+	private JTextComponent tfHost = null;
+
+	private JTextComponent tfPort, tfUser, tfPassword, tfKey, tfFile, tfRemoteFolder = null;
+
+	@Note("Key")
+	private AbstractButton btnKey = null;
+
+	private AbstractButton btnFile, btnExecute = null;
 
 	private SftpUploadBatch() {
 		//
