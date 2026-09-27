@@ -12,9 +12,12 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Proxy;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
@@ -33,6 +36,9 @@ import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -147,8 +153,38 @@ public class SftpUploadBatch extends JPanel implements ActionListener {
 
 	public static void main(final String[] args) throws Exception {
 		//
-		if (Objects.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.MacOSXFileSystem")
-				&& System.console() == null && !isTestMode()) {
+		final String name = getName(getClass(FileSystems.getDefault()));
+		//
+		boolean gui = Objects.equals(name, "sun.nio.fs.MacOSXFileSystem") && System.console() == null && !isTestMode();
+		//
+		if (!gui && Objects.equals(name, "sun.nio.fs.WindowsFileSystem")) {
+			//
+			final Matcher matcher = matcher(Pattern.compile("\\d+"), getName(ManagementFactory.getRuntimeMXBean()));
+			//
+			if (find(matcher)) {
+				//
+				final Process process = new ProcessBuilder("wmic", "process", "where", "processid=" + group(matcher),
+						"get", "executablepath").start();
+				//
+				try (final InputStream is = process != null ? process.getInputStream() : null) {
+					//
+					gui = endsWith(StringUtils.trim(IOUtils.toString(is, StandardCharsets.UTF_8)), "javaw.exe");
+					//
+				} finally {
+					//
+					if (process != null) {
+						//
+						process.destroy();
+						//
+					} // if
+						//
+				} // try
+					//
+			} // if
+				//
+		} // if
+			//
+		if (gui) {
 			//
 			final JFrame jFrame = !GraphicsEnvironment.isHeadless() ? new JFrame() : null;
 			//
@@ -313,6 +349,96 @@ public class SftpUploadBatch extends JPanel implements ActionListener {
 				//
 		} // if
 			//
+	}
+
+	private static boolean endsWith(final String instance, final String suffix) {
+		//
+		if (instance == null || suffix == null) {
+			//
+			return false;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						x -> Objects.equals(getName(x), VALUE)), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return (field == null || Boolean.logicalAnd(Narcissus.getField(instance, field) != null,
+				Narcissus.getField(suffix, field) != null)) && instance.endsWith(suffix);
+		//
+	}
+
+	private static String group(final MatchResult instance) {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field first = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "first")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (first != null && Objects.equals(first.getType(), Integer.TYPE)) {
+			//
+			return Narcissus.getIntField(instance, first) >= 0 ? instance.group() : null;
+			//
+		} // if
+			//
+		return instance.group();
+		//
+	}
+
+	private static boolean find(final Matcher instance) {
+		//
+		if (instance == null) {
+			//
+			return false;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "groups")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return (field == null || Narcissus.getField(instance, field) != null) && instance.find();
+		//
+	}
+
+	private static String getName(final RuntimeMXBean instance) {
+		return instance != null ? instance.getName() : null;
+	}
+
+	private static Matcher matcher(final Pattern instance, final CharSequence input) {
+		//
+		if (instance == null || input == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field normalizedPattern = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "normalizedPattern")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		final Field value = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(input), FieldUtils::getAllFieldsList, null)),
+						x -> Objects.equals(getName(x), VALUE)), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return (normalizedPattern == null || Narcissus.getField(instance, normalizedPattern) != null)
+				&& (value == null || Narcissus.getField(input, value) != null) ? instance.matcher(input) : null;
+		//
 	}
 
 	private static File getCanonicalFile(final File instance) throws IOException {

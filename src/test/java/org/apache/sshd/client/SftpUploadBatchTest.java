@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
@@ -25,6 +26,9 @@ import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
@@ -82,7 +86,7 @@ public class SftpUploadBatchTest {
 	private static Method METHOD_GET_NAME, METHOD_IS_SUCCESS, METHOD_COLLECT, METHOD_EXISTS, METHOD_IS_FILE,
 			METHOD_TO_PATH, METHOD_GET_PORT, METHOD_NEW_DOCUMENT_BUILDER, METHOD_PERFORM, METHOD_NEW_XPATH, METHOD_CAST,
 			METHOD_ADD_ACTION_LISTENER, METHOD_GET_ABSOLUTE_PATH, METHOD_SET_TEXT, METHOD_GET_TEXT, METHOD_SET_EDITABLE,
-			METHOD_FOR_EACH = null;
+			METHOD_FOR_EACH, METHOD_ENDS_WITH, METHOD_MATCHER, METHOD_FIND, METHOD_GROUP = null;
 
 	@BeforeClass
 	static void beforeClass() throws Throwable {
@@ -126,6 +130,14 @@ public class SftpUploadBatchTest {
 				.setAccessible(true);
 		//
 		(METHOD_FOR_EACH = clz.getDeclaredMethod("forEach", Iterable.class, Consumer.class)).setAccessible(true);
+		//
+		(METHOD_ENDS_WITH = clz.getDeclaredMethod("endsWith", String.class, String.class)).setAccessible(true);
+		//
+		(METHOD_MATCHER = clz.getDeclaredMethod("matcher", Pattern.class, CharSequence.class)).setAccessible(true);
+		//
+		(METHOD_FIND = clz.getDeclaredMethod("find", Matcher.class)).setAccessible(true);
+		//
+		(METHOD_GROUP = clz.getDeclaredMethod("group", MatchResult.class)).setAccessible(true);
 		//
 	}
 
@@ -266,6 +278,14 @@ public class SftpUploadBatchTest {
 				//
 				return null;
 				//
+			} else if (proxy instanceof RuntimeMXBean && Objects.equals(name, "getName")) {
+				//
+				return null;
+				//
+			} else if (proxy instanceof MatchResult && Objects.equals(name, "group")) {
+				//
+				return null;
+				//
 			} // if
 				//
 			throw new Throwable(name);
@@ -285,6 +305,8 @@ public class SftpUploadBatchTest {
 	private SftpUploadBatch instance = null;
 
 	private JTextComponent jTextComponent = null;
+
+	private Pattern pattern = null;
 
 	@BeforeMethod
 	void beforeMethod() throws Throwable {
@@ -331,6 +353,8 @@ public class SftpUploadBatchTest {
 		instance = cast(SftpUploadBatch.class, Narcissus.allocateInstance(SftpUploadBatch.class));
 		//
 		jTextComponent = new JTextField();
+		//
+		pattern = Pattern.compile("\\d+");
 		//
 	}
 
@@ -866,6 +890,55 @@ public class SftpUploadBatchTest {
 				Reflection.newProxy(Iterable.class, ObjectUtils.getIfNull(ih, IH::new)), null));
 		//
 		Assert.assertNull(invoke(METHOD_FOR_EACH, null, Collections.emptyList(), null));
+		//
+	}
+
+	@Test
+	void testEndsWith() throws IllegalAccessException, InvocationTargetException {
+		//
+		final String empty = "";
+		//
+		Assert.assertEquals(invoke(METHOD_ENDS_WITH, null, empty, null), Boolean.FALSE);
+		//
+		Assert.assertEquals(invoke(METHOD_ENDS_WITH, null, empty, Narcissus.allocateInstance(String.class)),
+				Boolean.FALSE);
+		//
+		Assert.assertEquals(invoke(METHOD_ENDS_WITH, null, empty, empty), Boolean.TRUE);
+		//
+		Assert.assertEquals(invoke(METHOD_ENDS_WITH, null, empty, " "), Boolean.FALSE);
+		//
+	}
+
+	@Test
+	void testMatcher() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertNull(invoke(METHOD_MATCHER, null, pattern, null));
+		//
+		Assert.assertNull(invoke(METHOD_MATCHER, null, pattern, Narcissus.allocateInstance(String.class)));
+		//
+		Assert.assertNotNull(invoke(METHOD_MATCHER, null, pattern, ""));
+		//
+	}
+
+	@Test
+	void testFind() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertEquals(invoke(METHOD_FIND, null, invoke(METHOD_MATCHER, null, pattern, "")), Boolean.FALSE);
+		//
+	}
+
+	@Test
+	void testGroup() throws IllegalAccessException, InvocationTargetException {
+		//
+		final String one = Integer.toString(1);
+		//
+		final Object matcher = invoke(METHOD_MATCHER, null, pattern, one);
+		//
+		Assert.assertNull(invoke(METHOD_GROUP, null, matcher));
+		//
+		Assert.assertEquals(invoke(METHOD_FIND, null, matcher), Boolean.TRUE);
+		//
+		Assert.assertEquals(invoke(METHOD_GROUP, null, matcher), one);
 		//
 	}
 
