@@ -122,7 +122,10 @@ public class SftpUploadBatch extends JPanel implements ActionListener {
 	@Note("User")
 	private JTextComponent tfUser = null;
 
-	private JTextComponent tfPassword, tfKey, tfFile, tfRemoteFolder = null;
+	@Note("Password")
+	private JTextComponent tfPassword = null;
+
+	private JTextComponent tfKey, tfFile, tfRemoteFolder = null;
 
 	@Note("Key")
 	private AbstractButton btnKey = null;
