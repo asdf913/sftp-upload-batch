@@ -116,12 +116,18 @@ public class SftpUploadBatch extends JPanel implements ActionListener {
 	@Note("Host")
 	private JTextComponent tfHost = null;
 
-	private JTextComponent tfPort, tfUser, tfPassword, tfKey, tfFile, tfRemoteFolder = null;
+	@Note("Port")
+	private JTextComponent tfPort = null;
+
+	private JTextComponent tfUser, tfPassword, tfKey, tfFile, tfRemoteFolder = null;
 
 	@Note("Key")
 	private AbstractButton btnKey = null;
 
-	private AbstractButton btnFile, btnExecute = null;
+	@Note("File")
+	private AbstractButton btnFile = null;
+
+	private AbstractButton btnExecute = null;
 
 	private SftpUploadBatch() {
 		//
