@@ -676,6 +676,12 @@ public class SftpUploadBatchTest {
 		//
 		FileUtils.deleteQuietly(f);
 		//
+		if (Objects.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.LinuxFileSystem")) {
+			//
+			SftpUploadBatch.main(new String[] { "gui=true" });
+			//
+		} // if
+			//
 	}
 
 	private static String nextAlphanumeric(final RandomStringUtils instnace, final int count) {
