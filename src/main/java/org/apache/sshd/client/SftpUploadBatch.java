@@ -17,7 +17,6 @@ import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Proxy;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
@@ -65,6 +64,7 @@ import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.function.FailableBiFunction;
@@ -101,6 +101,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import com.google.common.net.HostAndPort;
+import com.sun.jna.platform.win32.Kernel32Util;
 
 import io.github.toolfactory.narcissus.Narcissus;
 import net.miginfocom.swing.MigLayout;
@@ -163,19 +164,10 @@ public class SftpUploadBatch extends JPanel implements ActionListener {
 			//
 			if (find(matcher)) {
 				//
-				final Process process = new ProcessBuilder("wmic", "process", "where", "processid=" + group(matcher),
-						"get", "executablepath").start();
+				gui = BooleanUtils.toBooleanDefaultIfNull(testAndApply(NumberUtils::isDigits, group(matcher),
+						x -> endsWith(Kernel32Util.QueryFullProcessImageName(NumberUtils.toInt(x), 0), "javaw.exe"),
+						null), false);
 				//
-				try (final InputStream is = process != null ? process.getInputStream() : null) {
-					//
-					gui = endsWith(StringUtils.trim(IOUtils.toString(is, StandardCharsets.UTF_8)), "javaw.exe");
-					//
-				} finally {
-					//
-					destroy(process);
-					//
-				} // try
-					//
 			} // if
 				//
 		} // if
@@ -343,28 +335,6 @@ public class SftpUploadBatch extends JPanel implements ActionListener {
 				//
 			} // if
 				//
-		} // if
-			//
-	}
-
-	private static void destroy(final Process instance) {
-		//
-		if (instance == null) {
-			//
-			return;
-			//
-		} // if
-			//
-		final Field field = testAndApply(x -> size(x) == 1,
-				collect(filter(
-						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
-						x -> Objects.equals(getName(x), "processHandle")), Collectors.toList()),
-				x -> get(x, 0), null);
-		//
-		if (field == null || Narcissus.getField(instance, field) != null) {
-			//
-			instance.destroy();
-			//
 		} // if
 			//
 	}
