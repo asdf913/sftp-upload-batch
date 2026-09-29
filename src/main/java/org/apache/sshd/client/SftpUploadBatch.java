@@ -50,6 +50,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.swing.AbstractButton;
+import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -224,12 +225,8 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				//
 				insertElementAt(x, null, 0);
 				//
-				if (x != null) {
-					//
-					x.setSelectedItem(null);
-					//
-				} // if
-					//
+				setSelectedItem(x, null);
+				//
 			});
 			//
 			final ListCellRenderer<?> render = (instance.jcb = new JComboBox<Node>(dcbm)).getRenderer();
@@ -484,6 +481,12 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 	private static void forEach(final IntStream instnace, final IntConsumer action) {
 		if (instnace != null && Boolean.logicalOr(action != null, Proxy.isProxyClass(getClass(instnace)))) {
 			instnace.forEach(action);
+		}
+	}
+
+	private static void setSelectedItem(final ComboBoxModel<?> instance, final Object item) {
+		if (instance != null) {
+			instance.setSelectedItem(item);
 		}
 	}
 
