@@ -60,6 +60,8 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
+import javax.swing.ListModel;
+import javax.swing.MutableComboBoxModel;
 import javax.swing.WindowConstants;
 import javax.swing.text.JTextComponent;
 import javax.xml.namespace.QName;
@@ -229,12 +231,8 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				//
 			} // for
 				//
-			if (dcbm.getSize() == 1) {
-				//
-				dcbm.insertElementAt(null, 0);
-				//
-			} // if
-				//
+			testAndAccept(x -> getSize(x) == 1, dcbm, x -> insertElementAt(x, null, 0));
+			//
 			final ListCellRenderer<?> render = (instance.jcb = new JComboBox<Node>(dcbm)).getRenderer();
 			//
 			final List<Method> ms = collect(
@@ -459,6 +457,16 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				//
 		} // if
 			//
+	}
+
+	private static <E> void insertElementAt(final MutableComboBoxModel<E> instance, final E item, final int index) {
+		if (instance != null) {
+			instance.insertElementAt(item, index);
+		}
+	}
+
+	private static int getSize(final ListModel<?> instance) {
+		return instance != null ? instance.getSize() : 0;
 	}
 
 	private static void testAndRun(final boolean condition, final Runnable runnable) {

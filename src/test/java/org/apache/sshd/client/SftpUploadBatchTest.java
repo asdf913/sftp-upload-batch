@@ -38,6 +38,7 @@ import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
+import javax.swing.ListModel;
 import javax.swing.text.JTextComponent;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -172,6 +173,14 @@ public class SftpUploadBatchTest {
 				} else if (Objects.equals(name, "stream")) {
 					//
 					return null;
+					//
+				} // if
+					//
+			} else if (proxy instanceof ListModel) {
+				//
+				if (Objects.equals(name, "getSize")) {
+					//
+					return size;
 					//
 				} // if
 					//
