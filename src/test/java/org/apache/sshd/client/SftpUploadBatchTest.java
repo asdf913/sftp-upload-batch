@@ -729,6 +729,8 @@ public class SftpUploadBatchTest {
 		//
 		instance.itemStateChanged(new ItemEvent(jcb, 0, null, ItemEvent.SELECTED));
 		//
+		instance.itemStateChanged(new ItemEvent(jcb, 0, null, ItemEvent.DESELECTED));
+		//
 		instance.itemStateChanged(new ItemEvent(new JComboBox<>(), 0, null, ItemEvent.SELECTED));
 		//
 	}

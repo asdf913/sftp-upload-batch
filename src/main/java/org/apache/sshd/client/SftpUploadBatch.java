@@ -393,22 +393,50 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 	@Override
 	public void itemStateChanged(final ItemEvent evt) {
 		//
-		if (Objects.equals(getSource(evt), jcb) && evt != null && evt.getStateChange() == ItemEvent.SELECTED) {
+		if (Objects.equals(getSource(evt), jcb) && evt != null) {
 			//
-			final Node node = cast(Node.class, evt.getItem());
+			final int stateChange = evt.getStateChange();
 			//
-			setText(tfHost, getNodeValue(getNamedItem(getAttributes(node), "host")));
+			if (stateChange == ItemEvent.SELECTED) {
+				//
+				final Node node = cast(Node.class, evt.getItem());
+				//
+				setText(tfHost, getNodeValue(getNamedItem(getAttributes(node), "host")));
+				//
+				setText(tfPort, getNodeValue(getNamedItem(getAttributes(node), "port")));
+				//
+				setText(tfUser, getNodeValue(getNamedItem(getAttributes(node), "user")));
+				//
+				setText(tfPassword, getNodeValue(getNamedItem(getAttributes(node), PASSWORD)));
+				//
+				setText(tfKey, getNodeValue(getNamedItem(getAttributes(node), "key")));
+				//
+			} else if (stateChange == ItemEvent.DESELECTED && getSelectedItem(jcb) == null) {
+				//
+				forEach(Arrays.asList(tfHost, tfPort, tfUser, tfPassword, tfKey), x -> setText(x, null));
+				//
+			} // if
+				//
+		} // if
 			//
-			setText(tfPort, getNodeValue(getNamedItem(getAttributes(node), "port")));
+	}
+
+	private static Object getSelectedItem(final JComboBox<?> instance) {
+		//
+		if (instance == null) {
 			//
-			setText(tfUser, getNodeValue(getNamedItem(getAttributes(node), "user")));
-			//
-			setText(tfPassword, getNodeValue(getNamedItem(getAttributes(node), PASSWORD)));
-			//
-			setText(tfKey, getNodeValue(getNamedItem(getAttributes(node), "key")));
+			return null;
 			//
 		} // if
 			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						x -> Objects.equals(getName(x), "dataModel")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return field == null || Narcissus.getField(instance, field) != null ? instance.getSelectedItem() : null;
+		//
 	}
 
 	private static void showOpenDialogAndSetText(final File file, final JTextComponent jtc) {
