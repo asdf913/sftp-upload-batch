@@ -235,33 +235,27 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			final Method method = testAndApply(x -> size(x) == 1, ms, x -> get(x, 0), null);
 			//
-			instance.jcb.setRenderer(new ListCellRenderer<Node>() {
-
-				@Override
-				public Component getListCellRendererComponent(final JList<? extends Node> list, final Node value,
-						final int index, final boolean isSelected, final boolean cellHasFocus) {
+			instance.jcb.setRenderer((list, value, index, isSelected, cellHasFocus) -> {
+				//
+				final Component component = cast(Component.class,
+						Narcissus.invokeMethod(render, method, list, value, index, isSelected, cellHasFocus));
+				//
+				final JLabel jLabel = cast(JLabel.class, component);
+				//
+				if (jLabel != null && value != null) {
 					//
-					final Component component = cast(Component.class,
-							Narcissus.invokeMethod(render, method, list, value, index, isSelected, cellHasFocus));
+					final StringBuilder sb = new StringBuilder(
+							StringUtils.defaultString(getNodeValue(getNamedItem(getAttributes(value), "host"))));
 					//
-					final JLabel jLabel = cast(JLabel.class, component);
+					sb.append(':');
 					//
-					if (jLabel != null && value != null) {
-						//
-						final StringBuilder sb = new StringBuilder(
-								StringUtils.defaultString(getNodeValue(getNamedItem(getAttributes(value), "host"))));
-						//
-						sb.append(':');
-						//
-						jLabel.setText(Objects.toString(sb.append(
-								Objects.toString(getNodeValue(getNamedItem(getAttributes(value), "port")), "22"))));
-						//
-					} // if
-						//
-					return component;
+					jLabel.setText(Objects.toString(sb
+							.append(Objects.toString(getNodeValue(getNamedItem(getAttributes(value), "port")), "22"))));
 					//
-				}
-
+				} // if
+					//
+				return component;
+				//
 			});
 			//
 			instance.jcb.addItemListener(instance);
@@ -331,6 +325,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 		} // if
 			//
+
 		final File file = testAndApply(Objects::nonNull, get(map, "file"), File::new, null);
 		//
 		final String remoteFolder = get(map, "remoteFolder");
