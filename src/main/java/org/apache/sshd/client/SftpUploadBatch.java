@@ -220,7 +220,17 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			forEach(IntStream.range(0, getLength(nodeList)), i -> dcbm.addElement(item(nodeList, i)));
 			//
-			testAndAccept(x -> getSize(x) == 1, dcbm, x -> insertElementAt(x, null, 0));
+			testAndAccept(x -> getSize(x) == 1, dcbm, x -> {
+				//
+				insertElementAt(x, null, 0);
+				//
+				if (x != null) {
+					//
+					x.setSelectedItem(null);
+					//
+				} // if
+					//
+			});
 			//
 			final ListCellRenderer<?> render = (instance.jcb = new JComboBox<Node>(dcbm)).getRenderer();
 			//
