@@ -79,7 +79,6 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.function.FailableBiFunction;
-import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.function.FailableFunction;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -1089,14 +1088,13 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 		return instance != null ? instance.auth() : null;
 	}
 
-	private static <T, E extends Exception> void testAndAccept(final Predicate<T> predicate, final T value,
-			final FailableConsumer<T, E> consumer) throws E {
+	private static <T> void testAndAccept(final Predicate<T> predicate, final T value, final Consumer<T> consumer) {
 		if (test(predicate, value)) {
 			accept(consumer, value);
 		}
 	}
 
-	private static <T, E extends Exception> void accept(final FailableConsumer<T, E> instance, final T value) throws E {
+	private static <T> void accept(final Consumer<T> instance, final T value) {
 		if (instance != null) {
 			instance.accept(value);
 		}
