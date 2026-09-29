@@ -156,9 +156,22 @@ public class SftpUploadBatch extends JPanel implements ActionListener {
 		//
 		final String name = getName(getClass(FileSystems.getDefault()));
 		//
-		boolean gui = Boolean.logicalAnd(Objects.equals(name, "sun.nio.fs.MacOSXFileSystem"), System.console() == null)
-				&& !isTestMode();
+		boolean gui = false;
 		//
+		final Map<String, String> map = toMap(args);
+		//
+		if (containsKey(map, "gui")) {
+			//
+			gui = BooleanUtils.toBooleanDefaultIfNull(Boolean.valueOf(get(map, "gui")), gui);
+			//
+		} // if
+			//
+		if (Boolean.logicalAnd(Objects.equals(name, "sun.nio.fs.MacOSXFileSystem"), !isTestMode())) {
+			//
+			gui = System.console() == null;
+			//
+		} // if
+			//
 		if (Boolean.logicalAnd(!gui, Objects.equals(name, "sun.nio.fs.WindowsFileSystem"))) {
 			//
 			final Matcher matcher = matcher(Pattern.compile("\\d+"), getName(ManagementFactory.getRuntimeMXBean()));
@@ -171,14 +184,6 @@ public class SftpUploadBatch extends JPanel implements ActionListener {
 				//
 			} // if
 				//
-		} // if
-			//
-		final Map<String, String> map = toMap(args);
-		//
-		if (Boolean.logicalAnd(!gui, Objects.equals(name, "sun.nio.fs.LinuxFileSystem"))) {
-			//
-			gui = BooleanUtils.toBooleanDefaultIfNull(Boolean.valueOf(get(map, "gui")), gui);
-			//
 		} // if
 			//
 		if (gui) {
