@@ -228,6 +228,12 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				//
 			} // for
 				//
+			if (dcbm.getSize() == 1) {
+				//
+				dcbm.insertElementAt(null, 0);
+				//
+			} // if
+				//
 			final ListCellRenderer<?> render = (instance.jcb = new JComboBox<Node>(dcbm)).getRenderer();
 			//
 			final List<Method> ms = collect(
@@ -252,7 +258,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 					//
 					final JLabel jLabel = cast(JLabel.class, component);
 					//
-					if (jLabel != null) {
+					if (jLabel != null && value != null) {
 						//
 						final StringBuilder sb = new StringBuilder(
 								getNodeValue(getNamedItem(getAttributes(value), "host")));
