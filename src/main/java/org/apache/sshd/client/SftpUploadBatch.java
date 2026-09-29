@@ -39,6 +39,7 @@ import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -200,8 +201,6 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 		if (gui) {
 			//
-			final JFrame jFrame = !GraphicsEnvironment.isHeadless() ? new JFrame() : null;
-			//
 			final SftpUploadBatch instance = new SftpUploadBatch();
 			//
 			instance.setLayout(new MigLayout());
@@ -326,6 +325,8 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			forEach(Arrays.asList(instance.btnKey, instance.btnFile, instance.btnExecute),
 					x -> addActionListener(x, instance));
+			//
+			final JFrame jFrame = testAndGet(!GraphicsEnvironment.isHeadless(), JFrame::new);
 			//
 			if (jFrame != null) {
 				//
@@ -462,6 +463,10 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				//
 		} // if
 			//
+	}
+
+	private static <T> T testAndGet(final boolean condition, final Supplier<T> supplier) {
+		return condition && supplier != null ? supplier.get() : null;
 	}
 
 	private static boolean endsWith(final String instance, final String suffix) {

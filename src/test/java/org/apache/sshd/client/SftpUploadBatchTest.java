@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -88,7 +89,7 @@ public class SftpUploadBatchTest {
 	private static Method METHOD_GET_NAME, METHOD_IS_SUCCESS, METHOD_COLLECT, METHOD_EXISTS, METHOD_IS_FILE,
 			METHOD_TO_PATH, METHOD_GET_PORT, METHOD_NEW_DOCUMENT_BUILDER, METHOD_PERFORM, METHOD_NEW_XPATH, METHOD_CAST,
 			METHOD_ADD_ACTION_LISTENER, METHOD_GET_ABSOLUTE_PATH, METHOD_SET_TEXT, METHOD_GET_TEXT, METHOD_SET_EDITABLE,
-			METHOD_FOR_EACH, METHOD_ENDS_WITH, METHOD_MATCHER, METHOD_FIND, METHOD_GROUP = null;
+			METHOD_FOR_EACH, METHOD_ENDS_WITH, METHOD_MATCHER, METHOD_FIND, METHOD_GROUP, METHOD_TEST_AND_GET = null;
 
 	@BeforeClass
 	static void beforeClass() throws Throwable {
@@ -140,6 +141,8 @@ public class SftpUploadBatchTest {
 		(METHOD_FIND = clz.getDeclaredMethod("find", Matcher.class)).setAccessible(true);
 		//
 		(METHOD_GROUP = clz.getDeclaredMethod("group", MatchResult.class)).setAccessible(true);
+		//
+		(METHOD_TEST_AND_GET = clz.getDeclaredMethod("testAndGet", Boolean.TYPE, Supplier.class)).setAccessible(true);
 		//
 	}
 
@@ -285,6 +288,10 @@ public class SftpUploadBatchTest {
 				return null;
 				//
 			} else if (proxy instanceof MatchResult && Objects.equals(name, "group")) {
+				//
+				return null;
+				//
+			} else if (proxy instanceof Supplier && Objects.equals(name, "get")) {
 				//
 				return null;
 				//
@@ -966,6 +973,13 @@ public class SftpUploadBatchTest {
 		Assert.assertEquals(invoke(METHOD_FIND, null, matcher), Boolean.TRUE);
 		//
 		Assert.assertEquals(invoke(METHOD_GROUP, null, matcher), one);
+		//
+	}
+
+	@Test
+	void testTestAndGet() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertNull(invoke(METHOD_TEST_AND_GET, null, Boolean.FALSE, null));
 		//
 	}
 
