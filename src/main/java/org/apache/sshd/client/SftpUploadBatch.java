@@ -122,6 +122,8 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 
 	private static final String VALUE = "value";
 
+	private static final String PASSWORD = "password";
+
 	@Target(ElementType.FIELD)
 	@Retention(RetentionPolicy.RUNTIME)
 	private @interface Note {
@@ -296,7 +298,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			instance.add(instance.tfUser = new JTextField(), StringUtils.joinWith(",", growx, wrap));
 			//
-			instance.add(new JLabel("Password"));
+			instance.add(new JLabel(StringUtils.capitalize(PASSWORD)));
 			//
 			instance.add(instance.tfPassword = new JPasswordField(), StringUtils.joinWith(",", growx, wrap));
 			//
@@ -360,7 +362,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			info(LOG,
 					perform(testAndApply(Objects::nonNull, get(map, "host"),
 							x -> HostAndPort.fromParts(x, NumberUtils.toInt(get(map, "port"), 22)), null),
-							new BasicCredentialsImpl(get(map, "user"), get(map, "password")),
+							new BasicCredentialsImpl(get(map, "user"), get(map, PASSWORD)),
 							testAndApply(x -> size(x) == 1, testAndApply(x -> Boolean.logicalAnd(exists(x), isFile(x)),
 									testAndApply(Objects::nonNull, get(map, "key"), File::new, null),
 									x -> loadKeyPairs(PuttyKeyUtils.DEFAULT_INSTANCE, null, toPath(x), null), null),
@@ -422,7 +424,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			setText(tfUser, getNodeValue(getNamedItem(getAttributes(node), "user")));
 			//
-			setText(tfPassword, getNodeValue(getNamedItem(getAttributes(node), "password")));
+			setText(tfPassword, getNodeValue(getNamedItem(getAttributes(node), PASSWORD)));
 			//
 			setText(tfKey, getNodeValue(getNamedItem(getAttributes(node), "key")));
 			//
@@ -839,7 +841,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 									NumberUtils.toInt(getNodeValue(getNamedItem(getAttributes(n), "port")), 22)),
 							null),
 					new BasicCredentialsImpl(getNodeValue(getNamedItem(getAttributes(node), "user")),
-							getNodeValue(getNamedItem(getAttributes(node), "password"))),
+							getNodeValue(getNamedItem(getAttributes(node), PASSWORD))),
 					keyPair, file, remoteFolder));
 			//
 		} // for
