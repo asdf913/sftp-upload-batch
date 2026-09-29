@@ -183,14 +183,10 @@ public class SftpUploadBatchTest {
 					//
 				} // if
 					//
-			} else if (proxy instanceof ListModel) {
+			} else if (proxy instanceof ListModel && Objects.equals(name, "getSize")) {
 				//
-				if (Objects.equals(name, "getSize")) {
-					//
-					return size;
-					//
-				} // if
-					//
+				return size;
+				//
 			} // if
 				//
 			if (proxy instanceof Map) {
