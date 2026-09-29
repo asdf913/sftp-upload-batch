@@ -2,6 +2,7 @@ package org.apache.sshd.client;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.RuntimeMXBean;
@@ -34,6 +35,7 @@ import java.util.stream.Stream;
 
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JTextField;
 import javax.swing.text.JTextComponent;
 import javax.xml.parsers.DocumentBuilder;
@@ -676,12 +678,8 @@ public class SftpUploadBatchTest {
 		//
 		FileUtils.deleteQuietly(f);
 		//
-		if (Objects.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.LinuxFileSystem")) {
-			//
-			SftpUploadBatch.main(new String[] { "gui=true" });
-			//
-		} // if
-			//
+		SftpUploadBatch.main(new String[] { "gui=true" });
+		//
 	}
 
 	private static String nextAlphanumeric(final RandomStringUtils instnace, final int count) {
@@ -695,6 +693,25 @@ public class SftpUploadBatchTest {
 	private static Object invoke(final Method method, final Object instance, final Object... args)
 			throws IllegalAccessException, InvocationTargetException {
 		return method != null && method.getDeclaringClass() != null ? method.invoke(instance, args) : null;
+	}
+
+	@Test
+	public void testItemStateChanged() throws IllegalAccessException {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final JComboBox<?> jcb = new JComboBox<>();
+		//
+		FieldUtils.writeDeclaredField(instance, "jcb", jcb, true);
+		//
+		instance.itemStateChanged(new ItemEvent(jcb, 0, null, ItemEvent.SELECTED));
+		//
+		instance.itemStateChanged(new ItemEvent(new JComboBox<>(), 0, null, ItemEvent.SELECTED));
+		//
 	}
 
 	@Test

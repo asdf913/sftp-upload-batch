@@ -1,8 +1,11 @@
 package org.apache.sshd.client;
 
+import java.awt.Component;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -16,6 +19,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.nio.file.FileSystems;
 import java.nio.file.OpenOption;
@@ -43,14 +47,18 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.swing.AbstractButton;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.ListCellRenderer;
 import javax.swing.WindowConstants;
 import javax.swing.text.JTextComponent;
 import javax.xml.namespace.QName;
@@ -106,7 +114,7 @@ import com.sun.jna.platform.win32.Kernel32Util;
 import io.github.toolfactory.narcissus.Narcissus;
 import net.miginfocom.swing.MigLayout;
 
-public class SftpUploadBatch extends JPanel implements ActionListener {
+public class SftpUploadBatch extends JPanel implements ActionListener, ItemListener {
 
 	private static final long serialVersionUID = -7062996438496794210L;
 
@@ -147,6 +155,8 @@ public class SftpUploadBatch extends JPanel implements ActionListener {
 	private AbstractButton btnFile = null;
 
 	private AbstractButton btnExecute = null;
+
+	private JComboBox<Node> jcb = null;
 
 	private SftpUploadBatch() {
 		//
@@ -194,9 +204,79 @@ public class SftpUploadBatch extends JPanel implements ActionListener {
 			//
 			instance.setLayout(new MigLayout());
 			//
-			instance.add(new JLabel("Host"));
+			instance.add(new JLabel("Hosts"));
+			//
+			final DefaultComboBoxModel<Node> dcbm = new DefaultComboBoxModel<>();
+			//
+			final XPath xp = newXPath(XPathFactory.newInstance());
+			//
+			final NodeList nodeList = cast(NodeList.class, evaluate(xp, "/*/host",
+					parse(newDocumentBuilder(DocumentBuilderFactory.newInstance()), new File("sftp-upload-batch.xml")),
+					XPathConstants.NODESET));
+			//
+			Node node = null;
+			//
+			for (int i = 0; i < getLength(nodeList); i++) {
+				//
+				if ((node = item(nodeList, i)) == null) {
+					//
+					continue;
+					//
+				} // if
+					//
+				dcbm.addElement(node);
+				//
+			} // for
+				//
+			final ListCellRenderer<?> render = (instance.jcb = new JComboBox<Node>(dcbm)).getRenderer();
+			//
+			final List<Method> ms = collect(
+					filter(testAndApply(Objects::nonNull, ListCellRenderer.class.getDeclaredMethods(), Arrays::stream,
+							null),
+							m -> m != null
+									&& Boolean.logicalAnd(Objects.equals(getName(m), "getListCellRendererComponent"),
+											Arrays.equals(m.getParameterTypes(), new Class<?>[] { JList.class,
+													Object.class, Integer.TYPE, Boolean.TYPE, Boolean.TYPE }))),
+					Collectors.toList());
+			//
+			final Method method = testAndApply(x -> size(x) == 1, ms, x -> get(x, 0), null);
+			//
+			instance.jcb.setRenderer(new ListCellRenderer<Node>() {
+
+				@Override
+				public Component getListCellRendererComponent(final JList<? extends Node> list, final Node value,
+						final int index, final boolean isSelected, final boolean cellHasFocus) {
+					//
+					final Component component = cast(Component.class,
+							Narcissus.invokeMethod(render, method, list, value, index, isSelected, cellHasFocus));
+					//
+					final JLabel jLabel = cast(JLabel.class, component);
+					//
+					if (jLabel != null) {
+						//
+						final StringBuilder sb = new StringBuilder(
+								getNodeValue(getNamedItem(getAttributes(value), "host")));
+						//
+						sb.append(':');
+						//
+						jLabel.setText(Objects.toString(sb.append(
+								Objects.toString(getNodeValue(getNamedItem(getAttributes(value), "port")), "22"))));
+						//
+					} // if
+						//
+					return component;
+					//
+				}
+
+			});
+			//
+			instance.jcb.addItemListener(instance);
 			//
 			final String wrap = "wrap";
+			//
+			instance.add(instance.jcb, wrap);
+			//
+			instance.add(new JLabel("Host"));
 			//
 			instance.add(instance.tfHost = new JTextField(), String.format("%1$s,wmin %2$s", wrap, 100));
 			//
@@ -319,6 +399,27 @@ public class SftpUploadBatch extends JPanel implements ActionListener {
 				//
 			} // try
 				//
+		} // if
+			//
+	}
+
+	@Override
+	public void itemStateChanged(final ItemEvent evt) {
+		//
+		if (Objects.equals(getSource(evt), jcb) && evt != null && evt.getStateChange() == ItemEvent.SELECTED) {
+			//
+			final Node node = cast(Node.class, evt.getItem());
+			//
+			setText(tfHost, getNodeValue(getNamedItem(getAttributes(node), "host")));
+			//
+			setText(tfPort, getNodeValue(getNamedItem(getAttributes(node), "port")));
+			//
+			setText(tfUser, getNodeValue(getNamedItem(getAttributes(node), "user")));
+			//
+			setText(tfPassword, getNodeValue(getNamedItem(getAttributes(node), "password")));
+			//
+			setText(tfKey, getNodeValue(getNamedItem(getAttributes(node), "key")));
+			//
 		} // if
 			//
 	}
