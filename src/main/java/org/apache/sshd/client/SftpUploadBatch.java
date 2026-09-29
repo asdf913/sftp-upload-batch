@@ -38,6 +38,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.MatchResult;
@@ -45,6 +46,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.swing.AbstractButton;
@@ -216,20 +218,8 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 					parse(newDocumentBuilder(DocumentBuilderFactory.newInstance()), new File("sftp-upload-batch.xml")),
 					XPathConstants.NODESET));
 			//
-			Node node = null;
+			forEach(IntStream.range(0, getLength(nodeList)), i -> dcbm.addElement(item(nodeList, i)));
 			//
-			for (int i = 0; i < getLength(nodeList); i++) {
-				//
-				if ((node = item(nodeList, i)) == null) {
-					//
-					continue;
-					//
-				} // if
-					//
-				dcbm.addElement(node);
-				//
-			} // for
-				//
 			testAndAccept(x -> getSize(x) == 1, dcbm, x -> insertElementAt(x, null, 0));
 			//
 			final ListCellRenderer<?> render = (instance.jcb = new JComboBox<Node>(dcbm)).getRenderer();
@@ -456,6 +446,12 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				//
 		} // if
 			//
+	}
+
+	private static void forEach(final IntStream instnace, final IntConsumer action) {
+		if (instnace != null && Boolean.logicalOr(action != null, Proxy.isProxyClass(getClass(instnace)))) {
+			instnace.forEach(action);
+		}
 	}
 
 	private static <E> void insertElementAt(final MutableComboBoxModel<E> instance, final E item, final int index) {

@@ -26,12 +26,14 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collector;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.swing.AbstractButton;
@@ -90,7 +92,8 @@ public class SftpUploadBatchTest {
 	private static Method METHOD_GET_NAME, METHOD_IS_SUCCESS, METHOD_COLLECT, METHOD_EXISTS, METHOD_IS_FILE,
 			METHOD_TO_PATH, METHOD_GET_PORT, METHOD_NEW_DOCUMENT_BUILDER, METHOD_PERFORM, METHOD_NEW_XPATH, METHOD_CAST,
 			METHOD_ADD_ACTION_LISTENER, METHOD_GET_ABSOLUTE_PATH, METHOD_SET_TEXT, METHOD_GET_TEXT, METHOD_SET_EDITABLE,
-			METHOD_FOR_EACH, METHOD_ENDS_WITH, METHOD_MATCHER, METHOD_FIND, METHOD_GROUP, METHOD_TEST_AND_GET = null;
+			METHOD_FOR_EACH_ITERABLE, METHOD_FOR_EACH_INT_STREAM, METHOD_ENDS_WITH, METHOD_MATCHER, METHOD_FIND,
+			METHOD_GROUP, METHOD_TEST_AND_GET = null;
 
 	@BeforeClass
 	static void beforeClass() throws Throwable {
@@ -133,7 +136,11 @@ public class SftpUploadBatchTest {
 		(METHOD_SET_EDITABLE = clz.getDeclaredMethod("setEditable", JTextComponent.class, Boolean.TYPE))
 				.setAccessible(true);
 		//
-		(METHOD_FOR_EACH = clz.getDeclaredMethod("forEach", Iterable.class, Consumer.class)).setAccessible(true);
+		(METHOD_FOR_EACH_ITERABLE = clz.getDeclaredMethod("forEach", Iterable.class, Consumer.class))
+				.setAccessible(true);
+		//
+		(METHOD_FOR_EACH_INT_STREAM = clz.getDeclaredMethod("forEach", IntStream.class, IntConsumer.class))
+				.setAccessible(true);
 		//
 		(METHOD_ENDS_WITH = clz.getDeclaredMethod("endsWith", String.class, String.class)).setAccessible(true);
 		//
@@ -929,10 +936,14 @@ public class SftpUploadBatchTest {
 	@Test
 	void testForEach() throws IllegalAccessException, InvocationTargetException {
 		//
-		Assert.assertNull(invoke(METHOD_FOR_EACH, null,
-				Reflection.newProxy(Iterable.class, ObjectUtils.getIfNull(ih, IH::new)), null));
+		Assert.assertNull(invoke(METHOD_FOR_EACH_ITERABLE, null,
+				Reflection.newProxy(Iterable.class, ih = ObjectUtils.getIfNull(ih, IH::new)), null));
 		//
-		Assert.assertNull(invoke(METHOD_FOR_EACH, null, Collections.emptyList(), null));
+		Assert.assertNull(invoke(METHOD_FOR_EACH_ITERABLE, null, Collections.emptyList(), null));
+		//
+		Assert.assertNull(invoke(METHOD_FOR_EACH_INT_STREAM, null, IntStream.empty(), null));
+		//
+		Assert.assertNull(invoke(METHOD_FOR_EACH_INT_STREAM, null, Reflection.newProxy(IntStream.class, ih), null));
 		//
 	}
 
