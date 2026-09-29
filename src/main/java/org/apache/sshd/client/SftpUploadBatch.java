@@ -259,7 +259,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 					if (jLabel != null && value != null) {
 						//
 						final StringBuilder sb = new StringBuilder(
-								getNodeValue(getNamedItem(getAttributes(value), "host")));
+								StringUtils.defaultString(getNodeValue(getNamedItem(getAttributes(value), "host"))));
 						//
 						sb.append(':');
 						//
