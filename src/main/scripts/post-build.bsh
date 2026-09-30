@@ -1,0 +1,65 @@
+import java.io.File;
+import org.apache.commons.io.FileUtils;
+//
+var listFiles=new File(project.getProperties().get("project.build.directory")).listFiles();
+//
+var file=null;
+//
+var maxSize=null;
+//
+for(var i=0;i<listFiles.length;i++){
+	//
+	if((file=listFiles[i])==null||!file.isFile()){continue;}//if
+	//
+	maxSize=maxSize!=null?Math.max(file.length(),maxSize):file.length();
+	//
+}//for
+//
+var nextElement=null;
+//
+var name=null;
+//
+var classes=null;
+//
+for(var i=0;i<listFiles.length;i++){
+	//
+	if((file=listFiles[i])==null||!file.isFile()||maxSize==null||file.length()!=maxSize){continue;}//if
+	//
+	var sb=new StringBuilder(file.getAbsolutePath());
+	//
+	var lastIndexOf=sb.lastIndexOf(".");
+	//
+	if(lastIndexOf>=0){sb.insert(lastIndexOf,"(Reduced)");}
+	//
+	var newFile=new File(java.util.Objects.toString(sb));
+	//
+	FileUtils.copyFile(file,newFile);
+	//
+	java.util.zip.ZipFile zipFile = new java.util.zip.ZipFile(newFile);
+	//
+	var entries=zipFile.entries();
+	//
+	while(entries.hasMoreElements()){
+		//
+		if((nextElement=entries.nextElement())==null||(name=nextElement.getName())==null){continue;}
+		//
+		if(classes==null){classes=new java.util.ArrayList();}
+		//
+		if(name.endsWith(".class")){
+			//
+			classes.add(name);
+			//
+		}//if
+		//
+	}//while
+	//
+	var lines=FileUtils.readLines(new File(new File(project.getProperties().get("project.build.sourceDirectory")).getParentFile(),"scripts/classes.txt"),"utf-8");
+	//
+	for(var i=0;i<lines.size();i++){
+		classes.remove(lines.get(i));
+	}
+	//
+	new net.lingala.zip4j.ZipFile(newFile).removeFiles(classes);
+	//
+}//for
+//
