@@ -383,12 +383,8 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			pack(jFrame);
 			//
-			if (jFrame != null) {
-				//
-				testAndRun(!isTestMode(), () -> jFrame.setVisible(true));
-				//
-			} // if
-				//
+			testAndRun(!isTestMode(), () -> setVisible(jFrame, true));
+			//
 			return;
 			//
 		} // if
@@ -578,6 +574,12 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 		return gui;
 		//
+	}
+
+	private static void setVisible(final Component instnace, final boolean visible) {
+		if (instnace != null) {
+			instnace.setVisible(visible);
+		}
 	}
 
 	private static void pack(final Window instance) {
