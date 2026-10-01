@@ -311,12 +311,9 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				}
 			});
 			//
-			if (testAndApplyAsInt(x -> length(x) > 0, ports, NumberUtils::min, null, 0) == 0) {
-				//
-				instance.tfPort.addKeyListener(createKeyListener());
-				//
-			} // if
-				//
+			testAndRun(testAndApplyAsInt(x -> length(x) > 0, ports, NumberUtils::min, null, 0) == 0,
+					() -> instance.tfPort.addKeyListener(createKeyListener()));
+			//
 			add(instance, new JLabel("User"));
 			//
 			instance.add(instance.tfUser = new JTextField(), StringUtils.joinWith(",", growx, wrap));
