@@ -48,6 +48,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 
+import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.generic.InstructionList;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -626,6 +627,10 @@ public class SftpUploadBatchTest {
 				} else if (Objects.equals(parameterType, Number.class)) {
 					//
 					add(collection, Narcissus.allocateInstance(Integer.class));
+					//
+				} else if (Objects.equals(parameterType, FieldOrMethod.class)) {
+					//
+					add(collection, Narcissus.allocateInstance(org.apache.bcel.classfile.Method.class));
 					//
 				} else {
 					//

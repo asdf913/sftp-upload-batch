@@ -82,6 +82,8 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.bcel.classfile.ClassParser;
+import org.apache.bcel.classfile.ConstantPool;
+import org.apache.bcel.classfile.FieldOrMethod;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.generic.ConstantPoolGen;
 import org.apache.bcel.generic.IFLT;
@@ -315,9 +317,9 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 					} else if (instruction instanceof IF_ICMPLE && i > 0
 							&& (instruction = getInstruction(ArrayUtils.get(ihs, i - 1))) instanceof LDC) {
 						//
-						if (cpg == null && checkPort != null) {
+						if (cpg == null) {
 							//
-							cpg = testAndApply(Objects::nonNull, checkPort.getConstantPool(), ConstantPoolGen::new,
+							cpg = testAndApply(Objects::nonNull, getConstantPool(checkPort), ConstantPoolGen::new,
 									null);
 							//
 						} // if
@@ -576,6 +578,10 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 		return gui;
 		//
+	}
+
+	private static ConstantPool getConstantPool(final FieldOrMethod instnace) {
+		return instnace != null ? instnace.getConstantPool() : null;
 	}
 
 	private static InstructionHandle[] getInstructionHandles(final InstructionList instance) {
