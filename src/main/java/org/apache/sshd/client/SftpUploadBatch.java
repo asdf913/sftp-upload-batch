@@ -8,6 +8,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -271,7 +273,10 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			instance.add(instance.tfPort = new JTextField(), StringUtils.joinWith(",", growx, wrap));
 			//
-			final int maxPortStringLength = StringUtils.length(Integer.toString(NumberUtils.max(getPorts())));
+			final int[] ports = getPorts();
+			//
+			final int maxPortStringLength = StringUtils
+					.length(Integer.toString(ports != null && ports.length > 0 ? NumberUtils.max(ports) : 0));
 			//
 			instance.tfPort.setDocument(new PlainDocument() {
 				@Override
@@ -287,6 +292,32 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				}
 			});
 			//
+			if (ports != null && ports.length > 0 && NumberUtils.min(ports) == 0) {
+				//
+				instance.tfPort.addKeyListener(new KeyAdapter() {
+
+					public void keyTyped(final KeyEvent evt) {
+						//
+						if (evt == null) {
+							//
+							return;
+							//
+						} // if
+							//
+						final char c = evt.getKeyChar();
+						//
+						if (!((c >= '0') && (c <= '9') || (c == KeyEvent.VK_BACK_SPACE) || (c == KeyEvent.VK_DELETE))) {
+							//
+							evt.consume();
+							//
+						} // if
+							//
+					}
+
+				});
+				//
+			} // if
+				//
 			add(instance, new JLabel("User"));
 			//
 			instance.add(instance.tfUser = new JTextField(), StringUtils.joinWith(",", growx, wrap));
