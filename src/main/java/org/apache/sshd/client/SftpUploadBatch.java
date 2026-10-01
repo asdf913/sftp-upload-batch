@@ -375,9 +375,9 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			final JFrame jFrame = testAndGet(!GraphicsEnvironment.isHeadless(), JFrame::new);
 			//
+			setDefaultCloseOperation(jFrame, WindowConstants.EXIT_ON_CLOSE);
+			//
 			if (jFrame != null) {
-				//
-				jFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 				//
 				jFrame.add(instance);
 				//
@@ -577,6 +577,12 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 		return gui;
 		//
+	}
+
+	private static void setDefaultCloseOperation(final JFrame instance, final int operation) {
+		if (instance != null) {
+			instance.setDefaultCloseOperation(operation);
+		}
 	}
 
 	private static String getName(final FieldOrMethod instance) {
