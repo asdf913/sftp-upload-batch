@@ -538,6 +538,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 		//
 		return new KeyAdapter() {
 
+			@Override
 			public void keyTyped(final KeyEvent evt) {
 				//
 				if (evt == null) {
