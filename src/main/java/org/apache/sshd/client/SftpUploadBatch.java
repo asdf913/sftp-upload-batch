@@ -66,7 +66,10 @@ import javax.swing.ListCellRenderer;
 import javax.swing.ListModel;
 import javax.swing.MutableComboBoxModel;
 import javax.swing.WindowConstants;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.JTextComponent;
+import javax.swing.text.PlainDocument;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -280,6 +283,20 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			final String growx = "growx";
 			//
 			instance.add(instance.tfPort = new JTextField(), StringUtils.joinWith(",", growx, wrap));
+			//
+			instance.tfPort.setDocument(new PlainDocument() {
+				@Override
+				public void insertString(final int offset, final String string, final AttributeSet attributeSet)
+						throws BadLocationException {
+					//
+					if ((getLength() + StringUtils.length(string)) <= 5) {
+						//
+						super.insertString(offset, string, attributeSet);
+						//
+					} // if
+						//
+				}
+			});
 			//
 			instance.add(new JLabel("User"));
 			//
