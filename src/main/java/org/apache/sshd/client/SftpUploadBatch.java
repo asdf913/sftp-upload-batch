@@ -149,6 +149,8 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 
 	private static final String PASSWORD = "password";
 
+	private static final String OBJECT_LOCK = "objectLock";
+
 	@Target(ElementType.FIELD)
 	@Retention(RetentionPolicy.RUNTIME)
 	private @interface Note {
@@ -593,7 +595,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 		final Field field = testAndApply(x -> size(x) == 1,
 				collect(filter(
 						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
-						f -> Objects.equals(getName(f), "objectLock")), Collectors.toList()),
+						f -> Objects.equals(getName(f), OBJECT_LOCK)), Collectors.toList()),
 				x -> get(x, 0), null);
 		//
 		if (field == null || Narcissus.getField(instance, field) != null) {
@@ -685,7 +687,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 		final Field field = testAndApply(x -> size(x) == 1,
 				collect(filter(
 						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
-						f -> Objects.equals(getName(f), "objectLock")), Collectors.toList()),
+						f -> Objects.equals(getName(f), OBJECT_LOCK)), Collectors.toList()),
 				x -> get(x, 0), null);
 		//
 		if (field == null || Narcissus.getField(instance, field) != null) {
@@ -921,7 +923,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 		final Field field = testAndApply(x -> size(x) == 1,
 				collect(filter(
 						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
-						f -> Objects.equals(getName(f), "objectLock")), Collectors.toList()),
+						f -> Objects.equals(getName(f), OBJECT_LOCK)), Collectors.toList()),
 				x -> get(x, 0), null);
 		//
 		if (field == null || Narcissus.getField(instance, field) != null) {
