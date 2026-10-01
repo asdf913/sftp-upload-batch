@@ -277,8 +277,9 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			final int[] ports = getPorts();
 			//
-			final int maxPortStringLength = StringUtils
-					.length(Integer.toString(testAndApplyAsInt(x -> length(x) > 0, ports, NumberUtils::max, null, 0)));
+			final int maxPortNumber = testAndApplyAsInt(x -> length(x) > 0, ports, NumberUtils::max, null, 0);
+			//
+			final int maxPortStringLength = StringUtils.length(Integer.toString(maxPortNumber));
 			//
 			instance.tfPort.setDocument(new PlainDocument() {
 				@Override
@@ -287,6 +288,22 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 					//
 					if ((getLength() + StringUtils.length(string)) <= maxPortStringLength) {
 						//
+						final StringBuilder sb = testAndApply(Objects::nonNull,
+								SftpUploadBatch.getText(instance.tfPort), StringBuilder::new, null);
+						//
+						if (sb != null) {
+							//
+							sb.insert(offset, string);
+							//
+						} // if
+							//
+						if (NumberUtils.isDigits(Objects.toString(sb))
+								&& NumberUtils.toInt(Objects.toString(sb)) > maxPortNumber) {
+							//
+							return;
+							//
+						} // if
+							//
 						super.insertString(offset, string, attributeSet);
 						//
 					} // if
