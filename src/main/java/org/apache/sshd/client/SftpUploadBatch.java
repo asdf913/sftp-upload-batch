@@ -574,13 +574,15 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 		//
 		int[] ints = null;
 		//
+		org.apache.bcel.classfile.Method checkPort = null;
+		//
 		try (final InputStream is = SftpUploadBatch.class.getResourceAsStream(
 				StringUtils.join('/', replace(getName(InetSocketAddress.class), '.', '/'), ".class"))) {
 			//
 			final org.apache.bcel.classfile.Method[] methods = getMethods(
 					parse(testAndApply(Objects::nonNull, is, x -> new ClassParser(x, null), null)));
 			//
-			org.apache.bcel.classfile.Method m, checkPort = null;
+			org.apache.bcel.classfile.Method m = null;
 			//
 			for (int i = 0; i < length(methods); i++) {
 				//
@@ -600,35 +602,35 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				//
 			} // for
 				//
-			final InstructionHandle[] ihs = getInstructionHandles(
-					new MethodGen(checkPort, null, null).getInstructionList());
+		} // try
 			//
-			Instruction instruction = null;
+		final InstructionHandle[] ihs = getInstructionHandles(
+				new MethodGen(checkPort, null, null).getInstructionList());
+		//
+		Instruction instruction = null;
+		//
+		ConstantPoolGen cpg = null;
+		//
+		for (int i = 0; i < length(ihs); i++) {
 			//
-			ConstantPoolGen cpg = null;
-			//
-			for (int i = 0; i < length(ihs); i++) {
+			if ((instruction = getInstruction(ArrayUtils.get(ihs, i))) instanceof IFLT) {
 				//
-				if ((instruction = getInstruction(ArrayUtils.get(ihs, i))) instanceof IFLT) {
+				ints = ArrayUtils.add(ints, 0);
+				//
+			} else if (instruction instanceof IF_ICMPLE && i > 0
+					&& (instruction = getInstruction(ArrayUtils.get(ihs, i - 1))) instanceof LDC) {
+				//
+				if (cpg == null) {
 					//
-					ints = ArrayUtils.add(ints, 0);
-					//
-				} else if (instruction instanceof IF_ICMPLE && i > 0
-						&& (instruction = getInstruction(ArrayUtils.get(ihs, i - 1))) instanceof LDC) {
-					//
-					if (cpg == null) {
-						//
-						cpg = testAndApply(Objects::nonNull, getConstantPool(checkPort), ConstantPoolGen::new, null);
-						//
-					} // if
-						//
-					ints = ArrayUtils.add(ints, intValue(cast(Number.class, ((LDC) instruction).getValue(cpg)), 0));
+					cpg = testAndApply(Objects::nonNull, getConstantPool(checkPort), ConstantPoolGen::new, null);
 					//
 				} // if
 					//
-			} // for
+				ints = ArrayUtils.add(ints, intValue(cast(Number.class, ((LDC) instruction).getValue(cpg)), 0));
 				//
-		} // try
+			} // if
+				//
+		} // for
 			//
 		return ints;
 		//
