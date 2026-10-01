@@ -269,9 +269,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			try (final InputStream is = SftpUploadBatch.class.getResourceAsStream(
 					StringUtils.join('/', replace(getName(InetSocketAddress.class), '.', '/'), ".class"))) {
 				//
-				final JavaClass javaClass = new ClassParser(is, null).parse();
-				//
-				final org.apache.bcel.classfile.Method[] methods = javaClass != null ? javaClass.getMethods() : null;
+				final org.apache.bcel.classfile.Method[] methods = getMethods(new ClassParser(is, null).parse());
 				//
 				org.apache.bcel.classfile.Method m, checkPort = null;
 				//
@@ -579,6 +577,10 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 		return gui;
 		//
+	}
+
+	private static org.apache.bcel.classfile.Method[] getMethods(final JavaClass instance) {
+		return instance != null ? instance.getMethods() : null;
 	}
 
 	private static Instruction getInstruction(final InstructionHandle instance) {
