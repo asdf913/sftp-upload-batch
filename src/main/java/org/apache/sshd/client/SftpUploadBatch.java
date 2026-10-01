@@ -1381,9 +1381,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 						f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
 				x -> get(x, 0), null);
 		//
-		return field == null 
-				|| Narcissus.getField(instance, field) != null 
-				? instance.insert(offset, string)
+		return field == null || Narcissus.getField(instance, field) != null ? instance.insert(offset, string)
 				: instance;
 		//
 	}
