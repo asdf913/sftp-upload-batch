@@ -102,7 +102,7 @@ public class SftpUploadBatchTest {
 			METHOD_TO_PATH, METHOD_GET_PORT, METHOD_NEW_DOCUMENT_BUILDER, METHOD_PERFORM, METHOD_NEW_XPATH, METHOD_CAST,
 			METHOD_ADD_ACTION_LISTENER, METHOD_GET_ABSOLUTE_PATH, METHOD_SET_TEXT, METHOD_GET_TEXT, METHOD_SET_EDITABLE,
 			METHOD_FOR_EACH_ITERABLE, METHOD_FOR_EACH_INT_STREAM, METHOD_ENDS_WITH, METHOD_MATCHER, METHOD_FIND,
-			METHOD_GROUP, METHOD_TEST_AND_GET, METHOD_CREATE_KEY_LISTENER = null;
+			METHOD_GROUP, METHOD_TEST_AND_GET, METHOD_CREATE_KEY_LISTENER, METHOD_INSERT = null;
 
 	@BeforeClass
 	static void beforeClass() throws Throwable {
@@ -162,6 +162,9 @@ public class SftpUploadBatchTest {
 		(METHOD_TEST_AND_GET = clz.getDeclaredMethod("testAndGet", Boolean.TYPE, Supplier.class)).setAccessible(true);
 		//
 		(METHOD_CREATE_KEY_LISTENER = clz.getDeclaredMethod("createKeyListener")).setAccessible(true);
+		//
+		(METHOD_INSERT = clz.getDeclaredMethod("insert", StringBuilder.class, Integer.TYPE, String.class))
+				.setAccessible(true);
 		//
 	}
 
@@ -687,7 +690,9 @@ public class SftpUploadBatchTest {
 					|| Boolean.logicalAnd(Objects.equals(name, "getInstructionHandles"),
 							Arrays.equals(parameterTypes, new Class<?>[] { InstructionList.class }))
 					|| Boolean.logicalAnd(contains(Arrays.asList("getPorts", "createKeyListener"), name),
-							m.getParameterCount() == 0)) {
+							m.getParameterCount() == 0)
+					|| Boolean.logicalAnd(Objects.equals(name, "insert"), Arrays.equals(parameterTypes,
+							new Class<?>[] { StringBuilder.class, Integer.TYPE, String.class }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
@@ -1066,6 +1071,14 @@ public class SftpUploadBatchTest {
 		keyListener.keyTyped(new KeyEvent(component, 0, 0, 0, 0, (char) KeyEvent.VK_BACK_SPACE));
 		//
 		keyListener.keyTyped(new KeyEvent(component, 0, 0, 0, 0, (char) KeyEvent.VK_DELETE));
+		//
+	}
+
+	@Test
+	void testInsert() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertEquals(
+				Objects.toString(invoke(METHOD_INSERT, null, new StringBuilder("a"), Integer.valueOf(0), "b")), "ba");
 		//
 	}
 
