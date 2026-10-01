@@ -3,6 +3,7 @@ package org.apache.sshd.client;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.GraphicsEnvironment;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -380,9 +381,9 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			add(jFrame, instance);
 			//
+			pack(jFrame);
+			//
 			if (jFrame != null) {
-				//
-				jFrame.pack();
 				//
 				testAndRun(!isTestMode(), () -> jFrame.setVisible(true));
 				//
@@ -577,6 +578,28 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 		return gui;
 		//
+	}
+
+	private static void pack(final Window instance) {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "objectLock")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (field == null || Narcissus.getField(instance, field) != null) {
+			//
+			instance.pack();
+			//
+		} // if
+			//
 	}
 
 	private static void add(final Container instance, final Component comp) {
