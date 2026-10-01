@@ -395,8 +395,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 		//
 	}
 
-	private static void perform(final Map<?, String> map)
-			throws SAXException, IOException, ParserConfigurationException, RuntimeException, Exception {
+	private static void perform(final Map<?, String> map) throws RuntimeException, Exception {
 		//
 		final File file = testAndApply(Objects::nonNull, get(map, "file"), File::new, null);
 		//
