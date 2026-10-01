@@ -30,7 +30,7 @@
 </pre>
 
 ## Key
-The key file should be <b>putty</> format
+The key file should be <b>putty</b> format
 <a href="https://tartarus.org/~simon/putty-snapshots/htmldoc/AppendixC.html#ppk">PPK file format</a>
 
 ## Gui
