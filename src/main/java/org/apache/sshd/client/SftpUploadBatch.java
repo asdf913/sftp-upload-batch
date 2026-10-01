@@ -10,6 +10,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -295,27 +296,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			if (testAndApplyAsInt(x -> length(x) > 0, ports, NumberUtils::min, null, 0) == 0) {
 				//
-				instance.tfPort.addKeyListener(new KeyAdapter() {
-
-					public void keyTyped(final KeyEvent evt) {
-						//
-						if (evt == null) {
-							//
-							return;
-							//
-						} // if
-							//
-						final char c = evt.getKeyChar();
-						//
-						if (!((c >= '0') && (c <= '9') || (c == KeyEvent.VK_BACK_SPACE) || (c == KeyEvent.VK_DELETE))) {
-							//
-							evt.consume();
-							//
-						} // if
-							//
-					}
-
-				});
+				instance.tfPort.addKeyListener(createKeyListener());
 				//
 			} // if
 				//
@@ -550,6 +531,32 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 		} // if
 			//
 		return gui;
+		//
+	}
+
+	private static KeyListener createKeyListener() {
+		//
+		return new KeyAdapter() {
+
+			public void keyTyped(final KeyEvent evt) {
+				//
+				if (evt == null) {
+					//
+					return;
+					//
+				} // if
+					//
+				final char c = evt.getKeyChar();
+				//
+				if (!((c >= '0') && (c <= '9') || (c == KeyEvent.VK_BACK_SPACE) || (c == KeyEvent.VK_DELETE))) {
+					//
+					evt.consume();
+					//
+				} // if
+					//
+			}
+
+		};
 		//
 	}
 

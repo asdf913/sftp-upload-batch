@@ -5,6 +5,8 @@ import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.RuntimeMXBean;
@@ -100,7 +102,7 @@ public class SftpUploadBatchTest {
 			METHOD_TO_PATH, METHOD_GET_PORT, METHOD_NEW_DOCUMENT_BUILDER, METHOD_PERFORM, METHOD_NEW_XPATH, METHOD_CAST,
 			METHOD_ADD_ACTION_LISTENER, METHOD_GET_ABSOLUTE_PATH, METHOD_SET_TEXT, METHOD_GET_TEXT, METHOD_SET_EDITABLE,
 			METHOD_FOR_EACH_ITERABLE, METHOD_FOR_EACH_INT_STREAM, METHOD_ENDS_WITH, METHOD_MATCHER, METHOD_FIND,
-			METHOD_GROUP, METHOD_TEST_AND_GET = null;
+			METHOD_GROUP, METHOD_TEST_AND_GET, METHOD_CREATE_KEY_LISTENER = null;
 
 	@BeforeClass
 	static void beforeClass() throws Throwable {
@@ -158,6 +160,8 @@ public class SftpUploadBatchTest {
 		(METHOD_GROUP = clz.getDeclaredMethod("group", MatchResult.class)).setAccessible(true);
 		//
 		(METHOD_TEST_AND_GET = clz.getDeclaredMethod("testAndGet", Boolean.TYPE, Supplier.class)).setAccessible(true);
+		//
+		(METHOD_CREATE_KEY_LISTENER = clz.getDeclaredMethod("createKeyListener")).setAccessible(true);
 		//
 	}
 
@@ -488,7 +492,8 @@ public class SftpUploadBatchTest {
 							Arrays.equals(parameterTypes,
 									new Class<?>[] { HostAndPort.class, BasicCredentialsProvider.class, KeyPair.class,
 											File.class, String.class }))
-					|| Boolean.logicalAnd(Objects.equals(name, "getPorts"), m.getParameterCount() == 0)) {
+					|| Boolean.logicalAnd(contains(Arrays.asList("getPorts", "createKeyListener"), name),
+							m.getParameterCount() == 0)) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
@@ -681,7 +686,8 @@ public class SftpUploadBatchTest {
 							Arrays.equals(parameterTypes, new Class<?>[] { Class.class }))
 					|| Boolean.logicalAnd(Objects.equals(name, "getInstructionHandles"),
 							Arrays.equals(parameterTypes, new Class<?>[] { InstructionList.class }))
-					|| Boolean.logicalAnd(Objects.equals(name, "getPorts"), m.getParameterCount() == 0)) {
+					|| Boolean.logicalAnd(contains(Arrays.asList("getPorts", "createKeyListener"), name),
+							m.getParameterCount() == 0)) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
@@ -1031,6 +1037,35 @@ public class SftpUploadBatchTest {
 	void testTestAndGet() throws IllegalAccessException, InvocationTargetException {
 		//
 		Assert.assertNull(invoke(METHOD_TEST_AND_GET, null, Boolean.FALSE, null));
+		//
+	}
+
+	@Test
+	void testCreateKeyListener() throws Throwable {
+		//
+		final KeyListener keyListener = cast(KeyListener.class, invoke(METHOD_CREATE_KEY_LISTENER, null));
+		//
+		if (keyListener == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		keyListener.keyTyped(null);
+		//
+		keyListener.keyTyped(cast(KeyEvent.class, Narcissus.allocateInstance(KeyEvent.class)));
+		//
+		final Component component = new JTextField();
+		//
+		for (int i = 0; i <= 0; i++) {
+			//
+			keyListener.keyTyped(new KeyEvent(component, 0, 0, 0, 0, Integer.toString(i).charAt(0)));
+			//
+		} // for
+			//
+		keyListener.keyTyped(new KeyEvent(component, 0, 0, 0, 0, (char) KeyEvent.VK_BACK_SPACE));
+		//
+		keyListener.keyTyped(new KeyEvent(component, 0, 0, 0, 0, (char) KeyEvent.VK_DELETE));
 		//
 	}
 
