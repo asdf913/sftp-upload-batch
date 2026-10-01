@@ -277,7 +277,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				//
 				for (int i = 0; methods != null && i < methods.length; i++) {
 					//
-					if ((m = methods[i]) == null || !Objects.equals(m.getName(), "checkPort")) {
+					if (!Objects.equals(getName(m = ArrayUtils.get(methods, i)), "checkPort")) {
 						//
 						continue;
 						//
@@ -578,6 +578,10 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 		return gui;
 		//
+	}
+
+	private static String getName(final FieldOrMethod instance) {
+		return instance != null && instance.getConstantPool() != null ? instance.getName() : null;
 	}
 
 	private static ConstantPool getConstantPool(final FieldOrMethod instnace) {
