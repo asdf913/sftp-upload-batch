@@ -291,9 +291,8 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 					//
 				} // for
 					//
-				final InstructionList il = new MethodGen(checkPort, null, null).getInstructionList();
-				//
-				final InstructionHandle[] ihs = il != null ? il.getInstructionHandles() : null;
+				final InstructionHandle[] ihs = getInstructionHandles(
+						new MethodGen(checkPort, null, null).getInstructionList());
 				//
 				InstructionHandle ih = null;
 				//
@@ -577,6 +576,10 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 		return gui;
 		//
+	}
+
+	private static InstructionHandle[] getInstructionHandles(final InstructionList instance) {
+		return instance != null ? instance.getInstructionHandles() : null;
 	}
 
 	private static org.apache.bcel.classfile.Method[] getMethods(final JavaClass instance) {

@@ -48,6 +48,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 
+import org.apache.bcel.generic.InstructionList;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -657,7 +658,9 @@ public class SftpUploadBatchTest {
 					|| Boolean.logicalAnd(Objects.equals(name, "getPort"),
 							Arrays.equals(parameterTypes, new Class<?>[] { HostAndPort.class }))
 					|| Boolean.logicalAnd(Objects.equals(name, "getName"),
-							Arrays.equals(parameterTypes, new Class<?>[] { Class.class }))) {
+							Arrays.equals(parameterTypes, new Class<?>[] { Class.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "getInstructionHandles"),
+							Arrays.equals(parameterTypes, new Class<?>[] { InstructionList.class }))) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
