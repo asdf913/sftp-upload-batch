@@ -17,6 +17,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -88,6 +89,7 @@ import org.apache.commons.lang3.function.FailableBiFunction;
 import org.apache.commons.lang3.function.FailableFunction;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.commons.lang3.stream.Streams.FailableStream;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.sshd.client.future.AuthFuture;
 import org.apache.sshd.client.future.ConnectFuture;
@@ -235,12 +237,11 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			final ListCellRenderer<?> render = (instance.jcb = new JComboBox<Node>(dcbm)).getRenderer();
 			//
 			final List<Method> ms = collect(
-					filter(testAndApply(Objects::nonNull, ListCellRenderer.class.getDeclaredMethods(), Arrays::stream,
-							null),
-							m -> m != null
-									&& Boolean.logicalAnd(Objects.equals(getName(m), "getListCellRendererComponent"),
-											Arrays.equals(m.getParameterTypes(), new Class<?>[] { JList.class,
-													Object.class, Integer.TYPE, Boolean.TYPE, Boolean.TYPE }))),
+					stream(new FailableStream<>(testAndApply(Objects::nonNull,
+							ListCellRenderer.class.getDeclaredMethods(), Arrays::stream, null)).filter(
+									m -> Boolean.logicalAnd(Objects.equals(getName(m), "getListCellRendererComponent"),
+											Arrays.equals(getParameterTypes(m), new Class<?>[] { JList.class,
+													Object.class, Integer.TYPE, Boolean.TYPE, Boolean.TYPE })))),
 					Collectors.toList());
 			//
 			final Method method = testAndApply(x -> size(x) == 1, ms, x -> get(x, 0), null);
@@ -493,6 +494,24 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				//
 		} // if
 			//
+	}
+
+	private static <T> Stream<T> stream(final FailableStream<T> instance) {
+		return instance != null ? instance.stream() : null;
+	}
+
+	private static Class<?>[] getParameterTypes(final Executable instance) throws NoSuchFieldException {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = Narcissus.findField(getClass(instance), "parameterTypes");
+		//
+		return (field == null || Narcissus.getField(instance, field) != null) ? instance.getParameterTypes() : null;
+		//
 	}
 
 	private static void forEach(final IntStream instnace, final IntConsumer action) {

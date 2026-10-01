@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Array;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -616,6 +617,10 @@ public class SftpUploadBatchTest {
 				} else if (Objects.equals(parameterType, Process.class)) {
 					//
 					add(collection, Narcissus.allocateInstance(Class.forName("java.lang.ProcessImpl")));
+					//
+				} else if (Objects.equals(parameterType, Executable.class)) {
+					//
+					add(collection, Narcissus.allocateInstance(Class.forName("java.lang.reflect.Method")));
 					//
 				} else {
 					//
