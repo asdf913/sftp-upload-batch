@@ -47,6 +47,7 @@ import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.function.ToIntFunction;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -276,7 +277,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			final int[] ports = getPorts();
 			//
 			final int maxPortStringLength = StringUtils
-					.length(Integer.toString(ports != null && ports.length > 0 ? NumberUtils.max(ports) : 0));
+					.length(Integer.toString(testAndApplyAsInt(x -> length(x) > 0, ports, NumberUtils::max, null, 0)));
 			//
 			instance.tfPort.setDocument(new PlainDocument() {
 				@Override
@@ -292,7 +293,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				}
 			});
 			//
-			if (ports != null && ports.length > 0 && NumberUtils.min(ports) == 0) {
+			if (testAndApplyAsInt(x -> length(x) > 0, ports, NumberUtils::min, null, 0) == 0) {
 				//
 				instance.tfPort.addKeyListener(new KeyAdapter() {
 
@@ -550,6 +551,16 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 		return gui;
 		//
+	}
+
+	private static <T> int testAndApplyAsInt(final Predicate<T> predicate, final T value,
+			final ToIntFunction<T> functionTrue, final ToIntFunction<T> functionFalse, final int defautlValue) {
+		return test(predicate, value) ? applyAsInt(functionTrue, value, defautlValue)
+				: applyAsInt(functionFalse, value, defautlValue);
+	}
+
+	private static <T> int applyAsInt(final ToIntFunction<T> instance, final T value, final int defautlValue) {
+		return instance != null ? instance.applyAsInt(value) : defautlValue;
 	}
 
 	private static int[] getPorts() throws ClassFormatException, IOException {
@@ -1531,6 +1542,10 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 		return null;
 		//
+	}
+
+	private static int length(final int[] instance) {
+		return instance != null ? instance.length : 0;
 	}
 
 	private static int length(final Object[] instance) {

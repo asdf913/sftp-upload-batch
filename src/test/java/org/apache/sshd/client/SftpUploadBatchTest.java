@@ -32,6 +32,7 @@ import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.function.ToIntFunction;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -164,7 +165,7 @@ public class SftpUploadBatchTest {
 
 		private Boolean test, isSuccess, containsKey;
 
-		private Integer size, length;
+		private Integer size, length, applyAsInt;
 
 		@Override
 		public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
@@ -312,6 +313,10 @@ public class SftpUploadBatchTest {
 			} else if (proxy instanceof Supplier && Objects.equals(name, "get")) {
 				//
 				return null;
+				//
+			} else if (proxy instanceof ToIntFunction && Objects.equals(name, "applyAsInt")) {
+				//
+				return applyAsInt;
 				//
 			} // if
 				//
