@@ -1,6 +1,7 @@
 package org.apache.sshd.client;
 
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -197,7 +198,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			instance.setLayout(new MigLayout());
 			//
-			instance.add(new JLabel("Hosts"));
+			add(instance, new JLabel("Hosts"));
 			//
 			final DefaultComboBoxModel<Node> dcbm = new DefaultComboBoxModel<>();
 			//
@@ -256,11 +257,11 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			instance.add(instance.jcb, wrap);
 			//
-			instance.add(new JLabel("Host"));
+			add(instance, new JLabel("Host"));
 			//
 			instance.add(instance.tfHost = new JTextField(), String.format("%1$s,wmin %2$s", wrap, 100));
 			//
-			instance.add(new JLabel("Port"));
+			add(instance, new JLabel("Port"));
 			//
 			final String growx = "growx";
 			//
@@ -340,31 +341,31 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				}
 			});
 			//
-			instance.add(new JLabel("User"));
+			add(instance, new JLabel("User"));
 			//
 			instance.add(instance.tfUser = new JTextField(), StringUtils.joinWith(",", growx, wrap));
 			//
-			instance.add(new JLabel(StringUtils.capitalize(PASSWORD)));
+			add(instance, new JLabel(StringUtils.capitalize(PASSWORD)));
 			//
 			instance.add(instance.tfPassword = new JPasswordField(), StringUtils.joinWith(",", growx, wrap));
 			//
-			instance.add(new JLabel("Key"));
+			add(instance, new JLabel("Key"));
 			//
 			instance.add(instance.tfKey = new JTextField(), growx);
 			//
 			instance.add(instance.btnKey = new JButton("Choose Key"), wrap);
 			//
-			instance.add(new JLabel("File"));
+			add(instance, new JLabel("File"));
 			//
 			instance.add(instance.tfFile = new JTextField(), growx);
 			//
 			instance.add(instance.btnFile = new JButton("Choose File"), wrap);
 			//
-			instance.add(new JLabel("Remote Folder"));
+			add(instance, new JLabel("Remote Folder"));
 			//
 			instance.add(instance.tfRemoteFolder = new JTextField(), StringUtils.joinWith(",", growx, wrap));
 			//
-			instance.add(new JLabel());
+			add(instance, new JLabel());
 			//
 			instance.add(instance.btnExecute = new JButton("Upload"), wrap);
 			//
@@ -377,9 +378,9 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			setDefaultCloseOperation(jFrame, WindowConstants.EXIT_ON_CLOSE);
 			//
+			add(jFrame, instance);
+			//
 			if (jFrame != null) {
-				//
-				jFrame.add(instance);
 				//
 				jFrame.pack();
 				//
@@ -576,6 +577,28 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 		return gui;
 		//
+	}
+
+	private static void add(final Container instance, final Component comp) {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						x -> Objects.equals(getName(x), "component")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (field == null || Narcissus.getField(instance, field) != null) {
+			//
+			instance.add(comp);
+			//
+		} // if
+			//
 	}
 
 	private static void setDefaultCloseOperation(final JFrame instance, final int operation) {

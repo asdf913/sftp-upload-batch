@@ -1,5 +1,7 @@
 package org.apache.sshd.client;
 
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -40,6 +42,7 @@ import java.util.stream.Stream;
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.ListModel;
 import javax.swing.text.JTextComponent;
@@ -631,6 +634,11 @@ public class SftpUploadBatchTest {
 				} else if (Objects.equals(parameterType, FieldOrMethod.class)) {
 					//
 					add(collection, Narcissus.allocateInstance(org.apache.bcel.classfile.Method.class));
+					//
+				} else if (Objects.equals(parameterType, Container.class)
+						|| Objects.equals(parameterType, Component.class)) {
+					//
+					add(collection, Narcissus.allocateInstance(JPanel.class));
 					//
 				} else {
 					//
