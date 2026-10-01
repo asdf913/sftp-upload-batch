@@ -296,21 +296,13 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				final InstructionHandle[] ihs = getInstructionHandles(
 						new MethodGen(checkPort, null, null).getInstructionList());
 				//
-				InstructionHandle ih = null;
-				//
 				Instruction instruction = null;
 				//
 				ConstantPoolGen cpg = null;
 				//
 				for (int i = 0; i < length(ihs); i++) {
 					//
-					if ((ih = ArrayUtils.get(ihs, i)) == null) {
-						//
-						continue;
-						//
-					} // if
-						//
-					if ((instruction = getInstruction(ih)) instanceof IFLT) {
+					if ((instruction = getInstruction(ArrayUtils.get(ihs, i))) instanceof IFLT) {
 						//
 						ints = ArrayUtils.add(ints, 0);
 						//
