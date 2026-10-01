@@ -285,7 +285,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 						//
 					testAndRun(checkPort != null, () -> {
 						//
-						throw new RuntimeException();
+						throw new IllegalStateException();
 						//
 					});
 					//
