@@ -176,39 +176,9 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 
 	public static void main(final String[] args) throws Exception {
 		//
-		final String name = getName(getClass(FileSystems.getDefault()));
-		//
-		boolean gui = false;
-		//
 		final Map<String, String> map = toMap(args);
 		//
-		if (containsKey(map, "gui")) {
-			//
-			gui = BooleanUtils.toBooleanDefaultIfNull(Boolean.valueOf(get(map, "gui")), gui);
-			//
-		} // if
-			//
-		if (Boolean.logicalAnd(Objects.equals(name, "sun.nio.fs.MacOSXFileSystem"), !isTestMode())) {
-			//
-			gui = System.console() == null;
-			//
-		} // if
-			//
-		if (Boolean.logicalAnd(!gui, Objects.equals(name, "sun.nio.fs.WindowsFileSystem"))) {
-			//
-			final Matcher matcher = matcher(Pattern.compile("\\d+"), getName(ManagementFactory.getRuntimeMXBean()));
-			//
-			if (find(matcher)) {
-				//
-				gui = BooleanUtils.toBooleanDefaultIfNull(testAndApply(NumberUtils::isDigits, group(matcher),
-						x -> endsWith(Kernel32Util.QueryFullProcessImageName(NumberUtils.toInt(x), 0), "javaw.exe"),
-						null), false);
-				//
-			} // if
-				//
-		} // if
-			//
-		if (gui) {
+		if (isGui(map)) {
 			//
 			final SftpUploadBatch instance = new SftpUploadBatch();
 			//
@@ -348,7 +318,6 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 		} // if
 			//
-
 		final File file = testAndApply(Objects::nonNull, get(map, "file"), File::new, null);
 		//
 		final String remoteFolder = get(map, "remoteFolder");
@@ -492,6 +461,42 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				//
 		} // if
 			//
+	}
+
+	private static boolean isGui(final Map<?, String> map) {
+		//
+		boolean gui = false;
+		//
+		if (containsKey(map, "gui")) {
+			//
+			gui = BooleanUtils.toBooleanDefaultIfNull(Boolean.valueOf(get(map, "gui")), gui);
+			//
+		} // if
+			//
+		final String name = getName(getClass(FileSystems.getDefault()));
+		//
+		if (Boolean.logicalAnd(Objects.equals(name, "sun.nio.fs.MacOSXFileSystem"), !isTestMode())) {
+			//
+			gui = System.console() == null;
+			//
+		} // if
+			//
+		if (Boolean.logicalAnd(!gui, Objects.equals(name, "sun.nio.fs.WindowsFileSystem"))) {
+			//
+			final Matcher matcher = matcher(Pattern.compile("\\d+"), getName(ManagementFactory.getRuntimeMXBean()));
+			//
+			if (find(matcher)) {
+				//
+				gui = BooleanUtils.toBooleanDefaultIfNull(testAndApply(NumberUtils::isDigits, group(matcher),
+						x -> endsWith(Kernel32Util.QueryFullProcessImageName(NumberUtils.toInt(x), 0), "javaw.exe"),
+						null), false);
+				//
+			} // if
+				//
+		} // if
+			//
+		return gui;
+		//
 	}
 
 	private static void setText(final JLabel instance, final String text) {
