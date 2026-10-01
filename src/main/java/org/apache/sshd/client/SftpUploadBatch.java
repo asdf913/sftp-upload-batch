@@ -22,6 +22,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.InetSocketAddress;
 import java.nio.file.FileSystems;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
@@ -80,6 +81,16 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.apache.bcel.classfile.ClassParser;
+import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.generic.ConstantPoolGen;
+import org.apache.bcel.generic.IFLT;
+import org.apache.bcel.generic.IF_ICMPLE;
+import org.apache.bcel.generic.Instruction;
+import org.apache.bcel.generic.InstructionHandle;
+import org.apache.bcel.generic.InstructionList;
+import org.apache.bcel.generic.LDC;
+import org.apache.bcel.generic.MethodGen;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -253,12 +264,83 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			instance.add(instance.tfPort = new JTextField(), StringUtils.joinWith(",", growx, wrap));
 			//
+			int[] ints = null;
+			//
+			try (final InputStream is = SftpUploadBatch.class.getResourceAsStream(
+					StringUtils.join('/', replace(getName(InetSocketAddress.class), '.', '/'), ".class"))) {
+				//
+				final JavaClass javaClass = new ClassParser(is, null).parse();
+				//
+				final org.apache.bcel.classfile.Method[] methods = javaClass != null ? javaClass.getMethods() : null;
+				//
+				org.apache.bcel.classfile.Method m, checkPort = null;
+				//
+				for (int i = 0; methods != null && i < methods.length; i++) {
+					//
+					if ((m = methods[i]) == null || !Objects.equals(m.getName(), "checkPort")) {
+						//
+						continue;
+						//
+					} // if
+						//
+					if (checkPort != null) {
+						//
+						throw new RuntimeException();
+						//
+					} // if
+						//
+					checkPort = m;
+					//
+				} // for
+					//
+				final InstructionList il = new MethodGen(checkPort, null, null).getInstructionList();
+				//
+				final InstructionHandle[] ihs = il != null ? il.getInstructionHandles() : null;
+				//
+				InstructionHandle ih = null;
+				//
+				Instruction instruction = null;
+				//
+				ConstantPoolGen cpg = null;
+				//
+				for (int i = 0; ihs != null && i < ihs.length; i++) {
+					//
+					if ((ih = ArrayUtils.get(ihs, i)) == null) {
+						//
+						continue;
+						//
+					} // if
+						//
+					if ((instruction = getInstruction(ih)) instanceof IFLT) {
+						//
+						ints = ArrayUtils.add(ints, 0);
+						//
+					} else if (instruction instanceof IF_ICMPLE && i > 0
+							&& (instruction = getInstruction(ArrayUtils.get(ihs, i - 1))) instanceof LDC) {
+						//
+						if (cpg == null && checkPort != null) {
+							//
+							cpg = testAndApply(Objects::nonNull, checkPort.getConstantPool(), ConstantPoolGen::new,
+									null);
+							//
+						} // if
+							//
+						ints = ArrayUtils.add(ints, intValue(cast(Number.class, ((LDC) instruction).getValue(cpg)), 0));
+						//
+					} // if
+						//
+				} // for
+					//
+			} // try
+				//
+			final int maxPortStringLength = StringUtils.length(Integer.toString(NumberUtils.max(ints)));
+			//
 			instance.tfPort.setDocument(new PlainDocument() {
 				@Override
 				public void insertString(final int offset, final String string, final AttributeSet attributeSet)
 						throws BadLocationException {
 					//
-					if ((getLength() + StringUtils.length(string)) <= 5) {
+					if ((getLength() + StringUtils.length(string)) <= maxPortStringLength) {
 						//
 						super.insertString(offset, string, attributeSet);
 						//
@@ -497,6 +579,32 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 		return gui;
 		//
+	}
+
+	private static Instruction getInstruction(final InstructionHandle instance) {
+		return instance != null ? instance.getInstruction() : null;
+	}
+
+	private static String replace(final String instance, final char oldChar, final char newChar) {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						x -> Objects.equals(getName(x), VALUE)), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return field == null || Narcissus.getField(instance, field) != null ? instance.replace(oldChar, newChar) : null;
+		//
+	}
+
+	private static int intValue(final Number instance, final int defaultValue) {
+		return instance != null ? instance.intValue() : defaultValue;
 	}
 
 	private static void setText(final JLabel instance, final String text) {

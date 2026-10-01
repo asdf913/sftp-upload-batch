@@ -622,6 +622,10 @@ public class SftpUploadBatchTest {
 					//
 					add(collection, Narcissus.allocateInstance(Class.forName("java.lang.reflect.Method")));
 					//
+				} else if (Objects.equals(parameterType, Number.class)) {
+					//
+					add(collection, Narcissus.allocateInstance(Integer.class));
+					//
 				} else {
 					//
 					add(collection, Narcissus.allocateInstance(parameterType));

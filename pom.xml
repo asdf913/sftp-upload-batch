@@ -85,6 +85,12 @@
 		    <artifactId>jna-platform</artifactId>
 		    <version>5.19.1</version>
 		</dependency>
+		<!--https://mvnrepository.com/artifact/org.apache.bcel/bcel -->
+		<dependency>
+			<groupId>org.apache.bcel</groupId>
+			<artifactId>bcel</artifactId>
+			<version>6.13.0</version>
+		</dependency>
 		<!--https://mvnrepository.com/artifact/org.testng/testng -->
 		<dependency>
 			<groupId>org.testng</groupId>
