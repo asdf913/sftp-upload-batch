@@ -275,7 +275,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				//
 				org.apache.bcel.classfile.Method m, checkPort = null;
 				//
-				for (int i = 0; methods != null && i < methods.length; i++) {
+				for (int i = 0; i < length(methods); i++) {
 					//
 					if (!Objects.equals(getName(m = ArrayUtils.get(methods, i)), "checkPort")) {
 						//
@@ -302,7 +302,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				//
 				ConstantPoolGen cpg = null;
 				//
-				for (int i = 0; ihs != null && i < ihs.length; i++) {
+				for (int i = 0; i < length(ihs); i++) {
 					//
 					if ((ih = ArrayUtils.get(ihs, i)) == null) {
 						//
