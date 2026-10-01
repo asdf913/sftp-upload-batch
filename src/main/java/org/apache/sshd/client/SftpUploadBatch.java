@@ -251,16 +251,14 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				final Component component = cast(Component.class,
 						Narcissus.invokeMethod(render, method, list, value, index, isSelected, cellHasFocus));
 				//
-				final JLabel jLabel = cast(JLabel.class, component);
-				//
-				if (jLabel != null && value != null) {
+				if (value != null) {
 					//
 					final StringBuilder sb = new StringBuilder(
 							StringUtils.defaultString(getNodeValue(getNamedItem(getAttributes(value), "host"))));
 					//
 					sb.append(':');
 					//
-					jLabel.setText(Objects.toString(sb
+					setText(cast(JLabel.class, component), Objects.toString(sb
 							.append(Objects.toString(getNodeValue(getNamedItem(getAttributes(value), "port")), "22"))));
 					//
 				} // if
@@ -492,6 +490,28 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				//
 			} // if
 				//
+		} // if
+			//
+	}
+
+	private static void setText(final JLabel instance, final String text) {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "objectLock")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (field == null || Narcissus.getField(instance, field) != null) {
+			//
+			instance.setText(text);
+			//
 		} // if
 			//
 	}
