@@ -83,6 +83,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.apache.bcel.classfile.ClassFormatException;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.ConstantPool;
 import org.apache.bcel.classfile.FieldOrMethod;
@@ -270,65 +271,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			instance.add(instance.tfPort = new JTextField(), StringUtils.joinWith(",", growx, wrap));
 			//
-			int[] ints = null;
-			//
-			try (final InputStream is = SftpUploadBatch.class.getResourceAsStream(
-					StringUtils.join('/', replace(getName(InetSocketAddress.class), '.', '/'), ".class"))) {
-				//
-				final org.apache.bcel.classfile.Method[] methods = getMethods(new ClassParser(is, null).parse());
-				//
-				org.apache.bcel.classfile.Method m, checkPort = null;
-				//
-				for (int i = 0; i < length(methods); i++) {
-					//
-					if (!Objects.equals(getName(m = ArrayUtils.get(methods, i)), "checkPort")) {
-						//
-						continue;
-						//
-					} // if
-						//
-					testAndRun(checkPort != null, () -> {
-						//
-						throw new IllegalStateException();
-						//
-					});
-					//
-					checkPort = m;
-					//
-				} // for
-					//
-				final InstructionHandle[] ihs = getInstructionHandles(
-						new MethodGen(checkPort, null, null).getInstructionList());
-				//
-				Instruction instruction = null;
-				//
-				ConstantPoolGen cpg = null;
-				//
-				for (int i = 0; i < length(ihs); i++) {
-					//
-					if ((instruction = getInstruction(ArrayUtils.get(ihs, i))) instanceof IFLT) {
-						//
-						ints = ArrayUtils.add(ints, 0);
-						//
-					} else if (instruction instanceof IF_ICMPLE && i > 0
-							&& (instruction = getInstruction(ArrayUtils.get(ihs, i - 1))) instanceof LDC) {
-						//
-						if (cpg == null) {
-							//
-							cpg = testAndApply(Objects::nonNull, getConstantPool(checkPort), ConstantPoolGen::new,
-									null);
-							//
-						} // if
-							//
-						ints = ArrayUtils.add(ints, intValue(cast(Number.class, ((LDC) instruction).getValue(cpg)), 0));
-						//
-					} // if
-						//
-				} // for
-					//
-			} // try
-				//
-			final int maxPortStringLength = StringUtils.length(Integer.toString(NumberUtils.max(ints)));
+			final int maxPortStringLength = StringUtils.length(Integer.toString(NumberUtils.max(getPorts())));
 			//
 			instance.tfPort.setDocument(new PlainDocument() {
 				@Override
@@ -575,6 +518,88 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 		} // if
 			//
 		return gui;
+		//
+	}
+
+	private static int[] getPorts() throws ClassFormatException, IOException {
+		//
+		int[] ints = null;
+		//
+		try (final InputStream is = SftpUploadBatch.class.getResourceAsStream(
+				StringUtils.join('/', replace(getName(InetSocketAddress.class), '.', '/'), ".class"))) {
+			//
+			final org.apache.bcel.classfile.Method[] methods = getMethods(
+					parse(testAndApply(Objects::nonNull, is, x -> new ClassParser(x, null), null)));
+			//
+			org.apache.bcel.classfile.Method m, checkPort = null;
+			//
+			for (int i = 0; i < length(methods); i++) {
+				//
+				if (!Objects.equals(getName(m = ArrayUtils.get(methods, i)), "checkPort")) {
+					//
+					continue;
+					//
+				} // if
+					//
+				testAndRun(checkPort != null, () -> {
+					//
+					throw new IllegalStateException();
+					//
+				});
+				//
+				checkPort = m;
+				//
+			} // for
+				//
+			final InstructionHandle[] ihs = getInstructionHandles(
+					new MethodGen(checkPort, null, null).getInstructionList());
+			//
+			Instruction instruction = null;
+			//
+			ConstantPoolGen cpg = null;
+			//
+			for (int i = 0; i < length(ihs); i++) {
+				//
+				if ((instruction = getInstruction(ArrayUtils.get(ihs, i))) instanceof IFLT) {
+					//
+					ints = ArrayUtils.add(ints, 0);
+					//
+				} else if (instruction instanceof IF_ICMPLE && i > 0
+						&& (instruction = getInstruction(ArrayUtils.get(ihs, i - 1))) instanceof LDC) {
+					//
+					if (cpg == null) {
+						//
+						cpg = testAndApply(Objects::nonNull, getConstantPool(checkPort), ConstantPoolGen::new, null);
+						//
+					} // if
+						//
+					ints = ArrayUtils.add(ints, intValue(cast(Number.class, ((LDC) instruction).getValue(cpg)), 0));
+					//
+				} // if
+					//
+			} // for
+				//
+		} // try
+			//
+		return ints;
+		//
+	}
+
+	private static JavaClass parse(final ClassParser instance) throws ClassFormatException, IOException {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "dataInputStream")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		return (field == null || Narcissus.getField(instance, field) != null) ? instance.parse() : null;
 		//
 	}
 

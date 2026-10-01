@@ -432,7 +432,7 @@ public class SftpUploadBatchTest {
 		//
 		Object result = null;
 		//
-		String toString = null;
+		String toString, name = null;
 		//
 		Collection<Object> collection = null;
 		//
@@ -479,9 +479,11 @@ public class SftpUploadBatchTest {
 			toString = Objects.toString(m);
 			//
 			if (contains(Arrays.asList(Integer.TYPE, Boolean.TYPE), m.getReturnType())
-					|| Boolean.logicalAnd(Objects.equals(getName(m), "perform"),
-							Arrays.equals(parameterTypes, new Class<?>[] { HostAndPort.class,
-									BasicCredentialsProvider.class, KeyPair.class, File.class, String.class }))) {
+					|| Boolean.logicalAnd(Objects.equals(name = getName(m), "perform"),
+							Arrays.equals(parameterTypes,
+									new Class<?>[] { HostAndPort.class, BasicCredentialsProvider.class, KeyPair.class,
+											File.class, String.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "getPorts"), m.getParameterCount() == 0)) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
@@ -673,7 +675,8 @@ public class SftpUploadBatchTest {
 					|| Boolean.logicalAnd(Objects.equals(name, "getName"),
 							Arrays.equals(parameterTypes, new Class<?>[] { Class.class }))
 					|| Boolean.logicalAnd(Objects.equals(name, "getInstructionHandles"),
-							Arrays.equals(parameterTypes, new Class<?>[] { InstructionList.class }))) {
+							Arrays.equals(parameterTypes, new Class<?>[] { InstructionList.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "getPorts"), m.getParameterCount() == 0)) {
 				//
 				Assert.assertNotNull(result, toString);
 				//
