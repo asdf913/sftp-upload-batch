@@ -448,7 +448,7 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			instance.setEnabled(enabled);
 			//
 		} // if
-		//
+			//
 	}
 
 	private static void perform(final Map<?, String> map) throws RuntimeException, Exception {
