@@ -413,13 +413,8 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 
 	private static <T> boolean allMatch(final Stream<T> instance, final Predicate<? super T> predicate) {
 		//
-		if (instance == null || Boolean.logicalAnd(!Proxy.isProxyClass(getClass(instance)), predicate == null)) {
-			//
-			return false;
-			//
-		} // if
-			//
-		return instance.allMatch(predicate);
+		return instance != null && (Proxy.isProxyClass(getClass(instance)) || predicate != null)
+				&& instance.allMatch(predicate);
 		//
 	}
 
