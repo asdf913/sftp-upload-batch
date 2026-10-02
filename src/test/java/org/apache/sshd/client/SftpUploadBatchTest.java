@@ -193,6 +193,16 @@ public class SftpUploadBatchTest {
 				//
 			} // if
 				//
+			if (proxy instanceof Iterable) {
+				//
+				if (Objects.equals(name, "spliterator")) {
+					//
+					return null;
+					//
+				} // if
+					//
+			} // if
+				//
 			if (proxy instanceof Collection) {
 				//
 				if (Objects.equals(name, "size")) {

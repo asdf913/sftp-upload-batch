@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Spliterator;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -57,6 +58,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import javax.swing.AbstractButton;
 import javax.swing.ComboBoxModel;
@@ -346,30 +348,42 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			forEach(Arrays.asList(instance.btnKey, instance.btnFile, instance.btnExecute),
 					x -> addActionListener(x, instance));
 			//
-			forEach(map(Stream.of(instance.tfHost, instance.tfFile), SftpUploadBatch::getDocument),
-					x -> addDocumentListener(x, new DocumentListener() {
+			final Iterable<JTextComponent> jtcs = Arrays.asList(instance.tfHost, instance.tfFile,
+					instance.tfRemoteFolder);
+			//
+			forEach(map(testAndApply(Objects::nonNull, spliterator(jtcs), x -> StreamSupport.stream(x, false), null),
+					SftpUploadBatch::getDocument), x -> addDocumentListener(x, new DocumentListener() {
 
 						@Override
 						public void changedUpdate(final DocumentEvent evt) {
 							//
-							setEnabled(instance.btnExecute, allMatch(Stream.of(instance.tfHost, instance.tfFile),
-									x -> StringUtils.isNotBlank(getText(x))));
+							setEnabled(instance.btnExecute,
+									allMatch(
+											testAndApply(Objects::nonNull, spliterator(jtcs),
+													x -> StreamSupport.stream(x, false), null),
+											x -> StringUtils.isNotBlank(getText(x))));
 							//
 						}
 
 						@Override
 						public void insertUpdate(final DocumentEvent evt) {
 							//
-							setEnabled(instance.btnExecute, allMatch(Stream.of(instance.tfHost, instance.tfFile),
-									x -> StringUtils.isNotBlank(getText(x))));
+							setEnabled(instance.btnExecute,
+									allMatch(
+											testAndApply(Objects::nonNull, spliterator(jtcs),
+													x -> StreamSupport.stream(x, false), null),
+											x -> StringUtils.isNotBlank(getText(x))));
 							//
 						}
 
 						@Override
 						public void removeUpdate(final DocumentEvent evt) {
 							//
-							setEnabled(instance.btnExecute, allMatch(Stream.of(instance.tfHost, instance.tfFile),
-									x -> StringUtils.isNotBlank(getText(x))));
+							setEnabled(instance.btnExecute,
+									allMatch(
+											testAndApply(Objects::nonNull, spliterator(jtcs),
+													x -> StreamSupport.stream(x, false), null),
+											x -> StringUtils.isNotBlank(getText(x))));
 							//
 						}
 
@@ -391,6 +405,10 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 		perform(map);
 		//
+	}
+
+	private static <T> Spliterator<T> spliterator(final Iterable<T> instance) {
+		return instance != null ? instance.spliterator() : null;
 	}
 
 	private static <T> void forEach(final Stream<T> instance, final Consumer<? super T> action) {
