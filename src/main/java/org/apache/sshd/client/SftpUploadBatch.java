@@ -45,6 +45,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.IntConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -271,31 +272,6 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			instance.add(instance.tfHost = new JTextField(), String.format("%1$s,wmin %2$s", wrap, 100));
 			//
-			addDocumentListener(instance.tfHost.getDocument(), new DocumentListener() {
-
-				@Override
-				public void changedUpdate(final DocumentEvent evt) {
-					//
-					setEnabled(instance.btnExecute, StringUtils.isNotBlank(getText(instance.tfHost)));
-					//
-				}
-
-				@Override
-				public void insertUpdate(final DocumentEvent evt) {
-					//
-					setEnabled(instance.btnExecute, StringUtils.isNotBlank(getText(instance.tfHost)));
-					//
-				}
-
-				@Override
-				public void removeUpdate(final DocumentEvent evt) {
-					//
-					setEnabled(instance.btnExecute, StringUtils.isNotBlank(getText(instance.tfHost)));
-					//
-				}
-
-			});
-			//
 			add(instance, new JLabel("Port"));
 			//
 			final String growx = "growx";
@@ -370,6 +346,35 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			forEach(Arrays.asList(instance.btnKey, instance.btnFile, instance.btnExecute),
 					x -> addActionListener(x, instance));
 			//
+			forEach(map(Stream.of(instance.tfHost, instance.tfFile), SftpUploadBatch::getDocument),
+					x -> addDocumentListener(x, new DocumentListener() {
+
+						@Override
+						public void changedUpdate(final DocumentEvent evt) {
+							//
+							setEnabled(instance.btnExecute, allMatch(Stream.of(instance.tfHost, instance.tfFile),
+									x -> StringUtils.isNotBlank(getText(x))));
+							//
+						}
+
+						@Override
+						public void insertUpdate(final DocumentEvent evt) {
+							//
+							setEnabled(instance.btnExecute, allMatch(Stream.of(instance.tfHost, instance.tfFile),
+									x -> StringUtils.isNotBlank(getText(x))));
+							//
+						}
+
+						@Override
+						public void removeUpdate(final DocumentEvent evt) {
+							//
+							setEnabled(instance.btnExecute, allMatch(Stream.of(instance.tfHost, instance.tfFile),
+									x -> StringUtils.isNotBlank(getText(x))));
+							//
+						}
+
+					}));
+			//
 			final JFrame jFrame = testAndGet(!GraphicsEnvironment.isHeadless(), JFrame::new);
 			//
 			setDefaultCloseOperation(jFrame, WindowConstants.EXIT_ON_CLOSE);
@@ -385,6 +390,36 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 		} // if
 			//
 		perform(map);
+		//
+	}
+
+	private static <T> void forEach(final Stream<T> instance, final Consumer<? super T> action) {
+		if (instance != null && Boolean.logicalOr(Proxy.isProxyClass(getClass(instance)), action != null)) {
+			instance.forEach(action);
+		}
+	}
+
+	private static <T, R> Stream<R> map(final Stream<T> instance, final Function<? super T, ? extends R> mapper) {
+		//
+		return instance != null && Boolean.logicalOr(Proxy.isProxyClass(getClass(instance)), mapper != null)
+				? instance.map(mapper)
+				: null;
+		//
+	}
+
+	private static javax.swing.text.Document getDocument(final JTextComponent instance) {
+		return instance != null ? instance.getDocument() : null;
+	}
+
+	private static <T> boolean allMatch(final Stream<T> instance, final Predicate<? super T> predicate) {
+		//
+		if (instance == null || Boolean.logicalAnd(!Proxy.isProxyClass(getClass(instance)), predicate == null)) {
+			//
+			return false;
+			//
+		} // if
+			//
+		return instance.allMatch(predicate);
 		//
 	}
 

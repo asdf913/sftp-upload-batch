@@ -31,6 +31,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.IntConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -101,8 +102,9 @@ public class SftpUploadBatchTest {
 	private static Method METHOD_GET_NAME, METHOD_IS_SUCCESS, METHOD_COLLECT, METHOD_EXISTS, METHOD_IS_FILE,
 			METHOD_TO_PATH, METHOD_GET_PORT, METHOD_NEW_DOCUMENT_BUILDER, METHOD_PERFORM, METHOD_NEW_XPATH, METHOD_CAST,
 			METHOD_ADD_ACTION_LISTENER, METHOD_GET_ABSOLUTE_PATH, METHOD_SET_TEXT, METHOD_GET_TEXT, METHOD_SET_EDITABLE,
-			METHOD_FOR_EACH_ITERABLE, METHOD_FOR_EACH_INT_STREAM, METHOD_ENDS_WITH, METHOD_MATCHER, METHOD_FIND,
-			METHOD_GROUP, METHOD_TEST_AND_GET, METHOD_CREATE_KEY_LISTENER, METHOD_INSERT = null;
+			METHOD_FOR_EACH_ITERABLE, METHOD_FOR_EACH_INT_STREAM, METHOD_FOR_EACH_STREAM, METHOD_ENDS_WITH,
+			METHOD_MATCHER, METHOD_FIND, METHOD_GROUP, METHOD_TEST_AND_GET, METHOD_CREATE_KEY_LISTENER, METHOD_INSERT,
+			METHOD_ALL_MATCH, METHOD_MAP = null;
 
 	@BeforeClass
 	static void beforeClass() throws Throwable {
@@ -151,6 +153,8 @@ public class SftpUploadBatchTest {
 		(METHOD_FOR_EACH_INT_STREAM = clz.getDeclaredMethod("forEach", IntStream.class, IntConsumer.class))
 				.setAccessible(true);
 		//
+		(METHOD_FOR_EACH_STREAM = clz.getDeclaredMethod("forEach", Stream.class, Consumer.class)).setAccessible(true);
+		//
 		(METHOD_ENDS_WITH = clz.getDeclaredMethod("endsWith", String.class, String.class)).setAccessible(true);
 		//
 		(METHOD_MATCHER = clz.getDeclaredMethod("matcher", Pattern.class, CharSequence.class)).setAccessible(true);
@@ -166,11 +170,15 @@ public class SftpUploadBatchTest {
 		(METHOD_INSERT = clz.getDeclaredMethod("insert", StringBuilder.class, Integer.TYPE, String.class))
 				.setAccessible(true);
 		//
+		(METHOD_ALL_MATCH = clz.getDeclaredMethod("allMatch", Stream.class, Predicate.class)).setAccessible(true);
+		//
+		(METHOD_MAP = clz.getDeclaredMethod("map", Stream.class, Function.class)).setAccessible(true);
+		//
 	}
 
 	private static class IH implements InvocationHandler {
 
-		private Boolean test, isSuccess, containsKey;
+		private Boolean test, isSuccess, containsKey, allMatch;
 
 		private Integer size, length, applyAsInt;
 
@@ -227,9 +235,13 @@ public class SftpUploadBatchTest {
 				//
 			} else if (proxy instanceof Stream) {
 				//
-				if (contains(Arrays.asList("collect", "filter"), name)) {
+				if (contains(Arrays.asList("collect", "filter", "map"), name)) {
 					//
 					return null;
+					//
+				} else if (Objects.equals(name, "allMatch")) {
+					//
+					return allMatch;
 					//
 				} // if
 					//
@@ -987,6 +999,8 @@ public class SftpUploadBatchTest {
 		//
 		Assert.assertNull(invoke(METHOD_FOR_EACH_INT_STREAM, null, Reflection.newProxy(IntStream.class, ih), null));
 		//
+		Assert.assertNull(invoke(METHOD_FOR_EACH_STREAM, null, Stream.empty(), null));
+		//
 	}
 
 	@Test
@@ -1079,6 +1093,20 @@ public class SftpUploadBatchTest {
 		//
 		Assert.assertEquals(
 				Objects.toString(invoke(METHOD_INSERT, null, new StringBuilder("a"), Integer.valueOf(0), "b")), "ba");
+		//
+	}
+
+	@Test
+	void testAllMatch() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertEquals(invoke(METHOD_ALL_MATCH, null, Stream.empty(), null), Boolean.FALSE);
+		//
+	}
+
+	@Test
+	void testMap() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertNull(invoke(METHOD_MAP, null, Stream.empty(), null));
 		//
 	}
 
