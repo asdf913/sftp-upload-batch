@@ -74,6 +74,8 @@ import javax.swing.ListCellRenderer;
 import javax.swing.ListModel;
 import javax.swing.MutableComboBoxModel;
 import javax.swing.WindowConstants;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.JTextComponent;
@@ -269,6 +271,31 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			instance.add(instance.tfHost = new JTextField(), String.format("%1$s,wmin %2$s", wrap, 100));
 			//
+			addDocumentListener(instance.tfHost.getDocument(), new DocumentListener() {
+
+				@Override
+				public void changedUpdate(final DocumentEvent evt) {
+					//
+					setEnabled(instance.btnExecute, StringUtils.isNotBlank(getText(instance.tfHost)));
+					//
+				}
+
+				@Override
+				public void insertUpdate(final DocumentEvent evt) {
+					//
+					setEnabled(instance.btnExecute, StringUtils.isNotBlank(getText(instance.tfHost)));
+					//
+				}
+
+				@Override
+				public void removeUpdate(final DocumentEvent evt) {
+					//
+					setEnabled(instance.btnExecute, StringUtils.isNotBlank(getText(instance.tfHost)));
+					//
+				}
+
+			});
+			//
 			add(instance, new JLabel("Port"));
 			//
 			final String growx = "growx";
@@ -336,6 +363,8 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 			//
 			instance.add(instance.btnExecute = new JButton("Upload"), wrap);
 			//
+			setEnabled(instance.btnExecute, false);
+			//
 			forEach(Arrays.asList(instance.tfKey, instance.tfFile), x -> setEditable(x, false));
 			//
 			forEach(Arrays.asList(instance.btnKey, instance.btnFile, instance.btnExecute),
@@ -356,6 +385,34 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 		} // if
 			//
 		perform(map);
+		//
+	}
+
+	private static void addDocumentListener(final javax.swing.text.Document instance, final DocumentListener listener) {
+		if (instance != null) {
+			instance.addDocumentListener(listener);
+		}
+	}
+
+	private static void setEnabled(final AbstractButton instance, final boolean enabled) {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field field = testAndApply(x -> size(x) == 1,
+				collect(filter(
+						stream(testAndApply(Objects::nonNull, getClass(instance), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), "appContext")), Collectors.toList()),
+				x -> get(x, 0), null);
+		//
+		if (field == null || Narcissus.getField(instance, field) != null) {
+			//
+			instance.setEnabled(enabled);
+			//
+		} // if
 		//
 	}
 
