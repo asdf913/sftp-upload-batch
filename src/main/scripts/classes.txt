@@ -1255,3 +1255,4 @@ org/apache/commons/lang3/Validate.class
 org/apache/sshd/client/SftpUploadBatch$1.class
 org/apache/sshd/client/SftpUploadBatch$2.class
 org/apache/sshd/client/SftpUploadBatch$3.class
+org/apache/commons/lang3/function/FailableSupplier.class
