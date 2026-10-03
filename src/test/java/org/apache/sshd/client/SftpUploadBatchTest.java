@@ -63,6 +63,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.function.FailableBiFunction;
 import org.apache.commons.lang3.function.FailableFunction;
+import org.apache.commons.lang3.function.FailableSupplier;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.sshd.client.future.AuthFuture;
 import org.apache.sshd.client.session.ClientSession;
@@ -104,7 +105,7 @@ public class SftpUploadBatchTest {
 			METHOD_ADD_ACTION_LISTENER, METHOD_GET_ABSOLUTE_PATH, METHOD_SET_TEXT, METHOD_GET_TEXT, METHOD_SET_EDITABLE,
 			METHOD_FOR_EACH_ITERABLE, METHOD_FOR_EACH_INT_STREAM, METHOD_FOR_EACH_STREAM, METHOD_ENDS_WITH,
 			METHOD_MATCHER, METHOD_FIND, METHOD_GROUP, METHOD_TEST_AND_GET, METHOD_CREATE_KEY_LISTENER, METHOD_INSERT,
-			METHOD_ALL_MATCH, METHOD_MAP = null;
+			METHOD_ALL_MATCH, METHOD_MAP, METHOD_GET = null;
 
 	@BeforeClass
 	static void beforeClass() throws Throwable {
@@ -174,6 +175,8 @@ public class SftpUploadBatchTest {
 		//
 		(METHOD_MAP = clz.getDeclaredMethod("map", Stream.class, Function.class)).setAccessible(true);
 		//
+		(METHOD_GET = clz.getDeclaredMethod("get", FailableSupplier.class)).setAccessible(true);
+		//
 	}
 
 	private static class IH implements InvocationHandler {
@@ -181,6 +184,8 @@ public class SftpUploadBatchTest {
 		private Boolean test, isSuccess, containsKey, allMatch;
 
 		private Integer size, length, applyAsInt;
+
+		private Exception exception;
 
 		@Override
 		public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
@@ -335,8 +340,15 @@ public class SftpUploadBatchTest {
 				//
 				return null;
 				//
-			} else if (proxy instanceof Supplier && Objects.equals(name, "get")) {
+			} else if ((proxy instanceof Supplier || proxy instanceof FailableSupplier)
+					&& Objects.equals(name, "get")) {
 				//
+				if (proxy instanceof FailableSupplier && exception != null) {
+					//
+					throw exception;
+					//
+				} // if
+					//
 				return null;
 				//
 			} else if (proxy instanceof ToIntFunction && Objects.equals(name, "applyAsInt")) {
@@ -1113,6 +1125,19 @@ public class SftpUploadBatchTest {
 	void testMap() throws IllegalAccessException, InvocationTargetException {
 		//
 		Assert.assertNull(invoke(METHOD_MAP, null, Stream.empty(), null));
+		//
+	}
+
+	@Test
+	void testGet() throws IllegalAccessException, InvocationTargetException {
+		//
+		if ((ih = ObjectUtils.getIfNull(ih, IH::new)) != null) {
+			//
+			ih.exception = new Exception();
+			//
+		} // if
+			//
+		Assert.assertNull(invoke(METHOD_GET, null, Reflection.newProxy(FailableSupplier.class, ih)));
 		//
 	}
 

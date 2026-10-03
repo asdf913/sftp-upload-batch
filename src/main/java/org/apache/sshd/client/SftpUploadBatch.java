@@ -112,6 +112,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.function.FailableBiFunction;
 import org.apache.commons.lang3.function.FailableFunction;
+import org.apache.commons.lang3.function.FailableSupplier;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.stream.Streams.FailableStream;
@@ -1396,26 +1397,35 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 				//
 				append(append(remoteFolder, '/'), getName(file));
 				//
+				OutputStream os = null;
+				//
 				try (final SftpClient sftpClient = isSuccess(verify(auth(clientSession)))
 						? createSftpClient(SftpClientFactory.instance(), clientSession)
 						: null;
 						final InputStream is = testAndApply(
 								x -> x != null && x.getPath() != null && exists(x) && isFile(x), file,
-								FileInputStream::new, null);
-						final OutputStream os = Boolean.logicalAnd(isFile(file), remoteFolder != null)
-								? write(sftpClient, Objects.toString(remoteFolder))
-								: null) {
+								FileInputStream::new, null)) {
 					//
 					(result = new Result()).hostAndPort = hostAndPort;
 					//
 					result.usernameHolder = basicCredentialsProvider;
 					//
-					result.copy = testAndApply((a, b) -> Boolean.logicalAnd(a != null, b != null), is, os,
-							IOUtils::copy, null);
+					if ((result.stat = get(() -> stat(sftpClient, remoteFolderString))) != null
+							&& result.stat.isDirectory()) {
+						//
+						result.copy = testAndApply((a, b) -> Boolean.logicalAnd(a != null, b != null), is,
+								os = Boolean.logicalAnd(isFile(file), remoteFolder != null)
+										? write(sftpClient, Objects.toString(remoteFolder))
+										: null,
+								IOUtils::copy, null);
+						//
+						result.canonicalPath = canonicalPath(sftpClient, Objects.toString(remoteFolder));
+						//
+					} // if
+						//
+				} finally {
 					//
-					result.canonicalPath = canonicalPath(sftpClient, Objects.toString(remoteFolder));
-					//
-					result.stat = os != null ? stat(sftpClient, Objects.toString(remoteFolder)) : null;
+					IOUtils.closeQuietly(os);
 					//
 				} // try
 					//
@@ -1424,6 +1434,14 @@ public class SftpUploadBatch extends JPanel implements ActionListener, ItemListe
 		} // try
 			//
 		return result;
+	}
+
+	private static <R, E extends Exception> R get(final FailableSupplier<R, E> instance) {
+		try {
+			return instance != null ? instance.get() : null;
+		} catch (final Exception e) {
+			return null;
+		}
 	}
 
 	private static void info(final Logger instance, final String format, final Object object) {
